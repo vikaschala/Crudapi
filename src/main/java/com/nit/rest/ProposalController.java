@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,11 +14,17 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.resource.DefaultServletHttpRequestHandler;
 
 import com.nit.dto.ProposalDto;
 import com.nit.entity.Proposal;
+import com.nit.entity.UserFilter;
+import com.nit.entity.UserListing;
+import com.nit.repository.ProposalRepo;
 import com.nit.responsehandler.ResponseHandler;
 import com.nit.service.ProposalService;
+
+import lombok.experimental.PackagePrivate;
 
 @RestController
 @RequestMapping("/proposals")
@@ -24,9 +32,12 @@ public class ProposalController {
 
     @Autowired
     private ProposalService proposalService;
+    
+    @Autowired
+    private ProposalRepo proposalRepo;
 
  
-    @PostMapping("/proposals")
+    @PostMapping("/add")
     public ResponseHandler createProposal(@RequestBody ProposalDto dto) {
         ResponseHandler response = new ResponseHandler();
         try {
@@ -51,7 +62,7 @@ public class ProposalController {
     }
   
 
-    @GetMapping("/proposals/report")
+    @GetMapping("/report")
     public ResponseHandler getAllProposals() {
         ResponseHandler response = new ResponseHandler();
         try {
@@ -69,7 +80,7 @@ public class ProposalController {
     }
 
   
-    @GetMapping("/proposals/{id}")
+    @GetMapping("/list_by_id/{id}")
     public ResponseHandler getProposalById(@PathVariable Long id) {
         ResponseHandler response = new ResponseHandler();
         try {
@@ -91,7 +102,7 @@ public class ProposalController {
         return response;
     }
     
-    @PutMapping("/proposals/{id}")
+    @PutMapping("/update_by_id/{id}")
     public ResponseHandler updateProposal(@PathVariable Long id, @RequestBody ProposalDto dto) {
         ResponseHandler response = new ResponseHandler();
         try {
@@ -112,14 +123,13 @@ public class ProposalController {
         return response;
     }
     
-    @DeleteMapping("/proposals/{id}")
+    @DeleteMapping("/delete_by_id/{id}")
     public ResponseHandler deleteById(@PathVariable Long id) {
         ResponseHandler response = new ResponseHandler();
         try {
             proposalService.deleteById(id); // soft delete all active proposals
             response.setStatus(true);
-            response.setData("active proposals deleted.");
-            response.setMessage("proposals"
+               response.setMessage("proposals"
             		+ " deleted successfully.");
         } catch (Exception e) {
             response.setStatus(false);
@@ -129,4 +139,40 @@ public class ProposalController {
         }
         return response;
     }
+    @PostMapping("/pagination")
+    public ResponseHandler getProposers(@RequestBody UserListing listing) {
+        ResponseHandler response = new ResponseHandler();
+        try {
+            // Extract UserFilter from the UserListing object
+            UserFilter filter = listing.getUserFilter();
+
+            // Fetch proposers based on listing and filter
+          List<Proposal> proposers = proposalService.fetchAllProposerByListing(listing, filter);
+          List<Proposal> proposer=proposalRepo.findAll();
+     System.out.println(proposers);
+            // Set response properties
+            response.setData(proposers);
+            response.setStatus(true);
+            response.setMessage("Proposers fetched successfully.");
+            response.setTotalRecord(proposer.size());
+
+        } catch (IllegalArgumentException ex) {
+            // Handle invalid arguments (like invalid input fields)
+            response.setStatus(false);
+            response.setMessage("Invalid input provided: " + ex.getMessage());
+            response.setData(null);
+            response.setTotalRecord(0);
+        } catch (Exception ex) {
+            // Log the error and set a general error message
+            response.setStatus(false);
+            response.setMessage("An error occurred while fetching proposers.");
+            response.setData(null);
+            response.setTotalRecord(0);
+            
+            // Log the exception for debugging purposes (optional but highly recommended)
+            ex.printStackTrace();
+        }
+        return response;
+    }
+
 }

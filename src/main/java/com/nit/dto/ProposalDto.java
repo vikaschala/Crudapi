@@ -1,6 +1,7 @@
 package com.nit.dto;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import com.nit.enumeration.Gender;
 import com.nit.enumeration.MaritalStatus;
@@ -18,11 +19,14 @@ public class ProposalDto {
     private Long alternateMobileNumber;
     private LocalDate dateOfBirth;
     private String city;
-    private String pincode;
+  
+	private String pincode;
     private String address;
     private Gender gender;
     private MaritalStatus maritalStatus;
     private Nationality nationality;
+   private List<NomineeDto>nominee;
+  
 	public String getFirstName() {
 		return firstName;
 	}
@@ -114,5 +118,10 @@ public class ProposalDto {
 	public void setNationality(Nationality nationality) {
 		this.nationality = nationality;
 	}
-
+	 public List<NomineeDto> getNominee() {
+			return nominee;
+		}
+		public void setNominee(List<NomineeDto> nominee) {
+			this.nominee = nominee;
+		}
 }
