@@ -45,7 +45,7 @@ public class Nominee {
     private Character status;
     
     @Column(name="realtionship")
-   private String realtionship;
+    private String realtionship;
 
     @CreationTimestamp
     @Column(name = "created_at")

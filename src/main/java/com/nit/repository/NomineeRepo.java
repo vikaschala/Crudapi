@@ -10,5 +10,6 @@ import com.nit.entity.Nominee;
 @Repository
 public interface NomineeRepo extends JpaRepository<Nominee, Long> {
     List<Nominee> findByStatus(char status);  
-//  List<Nominee> findByUserId(Long userId);
+    List<Nominee> findByProposal_Id(Long proposalId);
 }
+ 

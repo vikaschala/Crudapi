@@ -11,7 +11,8 @@ public interface ProposalRepo extends JpaRepository<Proposal, Long> {
   
     List<Proposal> findByStatus(char status);
     boolean existsByEmailId(String emailId);
-    boolean existsByMobileNumber(Long mobileNumber);
+    boolean existsByMobileNumber(Long number);
     boolean existsByPanNumber(String panNumber);
+
 
 }

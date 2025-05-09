@@ -37,7 +37,8 @@ public class UserFilter {
     }
 
     public void setEmailId(String emailId) {
-        this.emailId = emailId;
+        this.emailId = emailId;       
+        
     }
 
     public String getMobileNumber() {

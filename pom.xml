@@ -54,8 +54,34 @@
 			<optional>true</optional>
 		</dependency>
 
-		<!-- Spring Boot DevTools (Optional for development) -->
 
+    <!-- Apache POI for working with Excel files (both .xls and .xlsx) -->
+    <dependency>
+        <groupId>org.apache.poi</groupId>
+        <artifactId>poi</artifactId>
+        <version>5.2.3</version> <!-- Use the latest version -->
+    </dependency>
+
+    <!-- Apache POI for working with OOXML (Excel 2007 and later .xlsx files) -->
+    <dependency>
+        <groupId>org.apache.poi</groupId>
+        <artifactId>poi-ooxml</artifactId>
+        <version>5.2.3</version> <!-- Use the latest version -->
+    </dependency>
+
+    <!-- Apache POI XMLBeans support (used internally for handling .xlsx files) -->
+    <dependency>
+        <groupId>org.apache.xmlbeans</groupId>
+        <artifactId>xmlbeans</artifactId>
+        <version>5.1.1</version> <!-- Use the latest version -->
+    </dependency>
+
+    <!-- Apache POI for OOXML schemas support (optional but recommended) -->
+    <dependency>
+        <groupId>org.apache.poi</groupId>
+        <artifactId>poi-ooxml-schemas</artifactId>
+        <version>4.1.2</version> <!-- Use the latest version -->
+    </dependency>
 
 		
 		<dependency>

@@ -27,79 +27,83 @@ import jakarta.persistence.Table;
 @Table(name="proposal_table")
 public class Proposal {
 
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Id
-    @Column(name = "proposal_id")
-    private Long id;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Id
+	@Column(name = "proposal_id")
+	private Long id;
 
-    @Column(name = "first_name")
-    private String firstName;
+	@Column(name = "first_name")
+	private String firstName;
 
-    @Column(name = "middle_name")
-    private String middleName;
+	@Column(name = "middle_name")
+	private String middleName;
 
-    @Column(name = "last_name")
-    private String lastName;
+	@Column(name = "last_name")
+	private String lastName;
 
-    @Column(name = "pan_number")
-    private String panNumber;
-    
-    @Column(name = "annual_income")
-    private Long annualIncome;
-    
-    @Column(name = "email_id")
-    private String emailId;
+	@Column(name = "pan_number")
+	private String panNumber;
 
-    @Column(name = "mobile_number")
-    private Long mobileNumber;
-    
-    @Column(name = "alternate_mobile_number")
-    private Long alternateMobileNumber;
+	@Column(name = "annual_income")
+	private Long annualIncome;
 
-    @Column(name = "date_of_birth")
-    private LocalDate dateOfBirth;
+	@Column(name = "email_id")
+	private String emailId;
 
-    @Column(name = "city")
-    private String city;
+	@Column(name = "mobile_number")
+	private Long mobileNumber;
 
-    @Column(name = "pincode")
-    private String pincode;
+	@Column(name = "alternate_mobile_number")
+	private Long alternateMobileNumber;
 
-    @Column(name = "address")
-    private String address;
+	@Column(name = "date_of_birth")
+	private LocalDate dateOfBirth;
+
+	@Column(name = "city")
+	private String city;
+
+	@Column(name = "pincode")
+	private String pincode;
+
+	@Column(name = "address")
+	private String address;
 
 
-    @Enumerated(EnumType.STRING) 
-    @Column(name = "gender")
-    private Gender gender;
-
-    @Enumerated(EnumType.STRING)  
-    @Column(name = "marital_status")
-    private MaritalStatus maritalStatus;  
-
-   
+	@Enumerated(EnumType.STRING) 
+	@Column(name = "gender")
+	private Gender gender;
 
 	@Enumerated(EnumType.STRING)  
-    @Column(name = "nationality")
-    private Nationality nationality;
-   
-    @Column(name="status")
-     private  Character status;
+	@Column(name = "marital_status")
+	private MaritalStatus maritalStatus;  
 
-    @CreationTimestamp
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
 
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
- 
-    @OneToMany(mappedBy = "proposal", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Nominee> nominees;
 
-    public List<Nominee> getNominees() { return nominees; }
-    public void setNominees(List<Nominee> nominees) { this.nominees = nominees; }
-   
+	@Enumerated(EnumType.STRING)  
+	@Column(name = "nationality")
+	private Nationality nationality;
+
+	@Column(name="status")
+	private  Character status;
+
+	@CreationTimestamp
+	@Column(name = "created_at")
+	private LocalDateTime createdAt;
+
+	@UpdateTimestamp
+	@Column(name = "updated_at")
+	private LocalDateTime updatedAt;
+
+	@OneToMany(mappedBy = "proposal", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<Nominee> nominees;
+
+	public List<Nominee> getNominees() { 
+		return nominees; 
+	}
+	public void setNominees(List<Nominee> nominees) { 
+		this.nominees = nominees; 
+	}
+
 	public LocalDateTime getCreatedAt() {
 		return createdAt;
 	}
@@ -126,7 +130,7 @@ public class Proposal {
 
 	public Long getId() {
 		return id;
-		
+
 	}
 
 	public void setId(Long id) {
