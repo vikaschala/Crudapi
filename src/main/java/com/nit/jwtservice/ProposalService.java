@@ -1,4 +1,4 @@
-package com.nit.service;
+package com.nit.jwtservice;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;

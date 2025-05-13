@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.nit.JwtUtil.JwtUtil;
 import com.nit.entity.User;
-import com.nit.model.AuthenticationRequest;
+import com.nit.jwtmodel.AuthenticationRequest;
 import com.nit.repository.UserRepository;
 
 

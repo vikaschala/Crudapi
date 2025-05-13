@@ -35,11 +35,11 @@ import com.nit.entity.UserListing;
 import com.nit.enumeration.Gender;
 import com.nit.enumeration.MaritalStatus;
 import com.nit.enumeration.Nationality;
+import com.nit.jwtservice.ProposalService;
 import com.nit.repository.NomineeRepo;
 import com.nit.repository.ProcessingQueueRepo;
 import com.nit.repository.ProposalRepo;
 import com.nit.repository.UserImportLogRepo;
-import com.nit.service.ProposalService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;

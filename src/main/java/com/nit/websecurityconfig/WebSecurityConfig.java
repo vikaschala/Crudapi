@@ -14,7 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.nit.filters.JwtRequestFilter;
+import com.nit.jwtfilter.JwtRequestFilter;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -29,18 +29,19 @@ public class WebSecurityConfig {
 		this.jwtRequestFilter = jwtRequestFilter;
 	}
 
+	
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 	    http.csrf(csrf -> csrf.disable())
 	        .authorizeHttpRequests(auth -> auth
-	            .requestMatchers("/auth/register", "/auth/login").permitAll()
+	        		.requestMatchers("/auth/register", "/auth/login","/swagger-ui.html", "/swagger-ui/", "/v3/api-docs/").permitAll()
 	            .anyRequest().authenticated()
 	        )
 	        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 	        .authenticationProvider(authenticationProvider())
 	        .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
 	        .exceptionHandling(handling -> handling
-	            .authenticationEntryPoint((request, response, authException) -> 
+	            .authenticationEntryPoint((request, response, authException) ->
 	                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
 	        );
 

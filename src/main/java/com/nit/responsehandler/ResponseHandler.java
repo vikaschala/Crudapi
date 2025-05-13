@@ -10,7 +10,7 @@ public class ResponseHandler {
     private Object data;
     private Integer totalRecord;
 
-    // Getters and Setters
+ 
     public boolean isStatus() {
         return status;
     }
@@ -43,23 +43,23 @@ public class ResponseHandler {
         this.totalRecord = totalRecord;
     }
 
-    // Method to return success response
+ 
     public static ResponseEntity<Object> generateResponse(String message, HttpStatus status, Object responseObj) {
         ResponseHandler response = new ResponseHandler();
         response.setMessage(message);
         response.setStatus(true);
         response.setData(responseObj);
-        response.setTotalRecord(null); // No total records in success
+        response.setTotalRecord(null); 
         return new ResponseEntity<>(response, status);
     }
 
-    // Method to return error response
+
     public static ResponseEntity<Object> generateErrorResponse(String message, HttpStatus status) {
         ResponseHandler response = new ResponseHandler();
         response.setMessage(message);
         response.setStatus(false);
-        response.setData(null); // No data for error
-        response.setTotalRecord(0); // No total records on error
+        response.setData(null);
+        response.setTotalRecord(0);
         return new ResponseEntity<>(response, status);
     }
 }

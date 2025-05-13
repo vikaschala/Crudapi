@@ -1,4 +1,4 @@
-package com.nit.rest;
+package com.nit.controller;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.nit.model.AuthenticationRequest;
+import com.nit.jwtmodel.AuthenticationRequest;
 import com.nit.user_service.UserService;
 
 @RestController
@@ -26,6 +26,7 @@ public class AuthController {
         String response = userService.register(request.getUsername(), request.getPassword());
         return ResponseEntity.ok(response);
     }
+    
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> request) {
         String username = request.get("username");

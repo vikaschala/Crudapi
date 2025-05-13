@@ -1,4 +1,4 @@
-package com.nit.rest;
+package com.nit.controller;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,11 +28,11 @@ import com.nit.dto.ProposalDto;
 import com.nit.entity.Proposal;
 import com.nit.entity.UserFilter;
 import com.nit.entity.UserListing;
-import com.nit.model.AuthenticationRequest;
-import com.nit.model.AuthenticationResponse;
+import com.nit.jwtmodel.AuthenticationRequest;
+import com.nit.jwtmodel.AuthenticationResponse;
+import com.nit.jwtservice.ProposalService;
 import com.nit.repository.ProposalRepo;
 import com.nit.responsehandler.ResponseHandler;
-import com.nit.service.ProposalService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletResponse;
@@ -46,39 +46,7 @@ public class ProposalController {
 
 	@Autowired
 	private ProposalRepo proposalRepo;
-	  @Autowired
-	    private AuthenticationManager authenticationManager;
-
-	    @Autowired
-	    private UserDetailsService userDetailsService; 
-
-	    @Autowired
-	    private JwtUtil jwtTokenUtil; 
-
-	    @PostMapping("/authenticate")
-	    public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) {
-	        try {
-	         
-	            authenticationManager.authenticate(
-	                new UsernamePasswordAuthenticationToken(
-	                	
-	                    authenticationRequest.getUsername(), 
-	                    authenticationRequest.getPassword()
-	                 
-	                )
-	               
-	            );
-	        } catch (BadCredentialsException e) {
-	          
-	          throw new IllegalArgumentException("Incorrect username or password\", HttpStatus.UNAUTHORIZED");
-	        }
-
-	        final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
-
-	        final String jwt = jwtTokenUtil.generateToken(userDetails);
-
-	        return ResponseHandler.generateResponse("Authentication successful", HttpStatus.OK, new AuthenticationResponse(jwt));
-	    }
+  
 
 	@PostMapping("/add")
 	public ResponseHandler createProposal(@RequestBody ProposalDto dto) {
@@ -101,7 +69,7 @@ public class ProposalController {
 			response.setMessage(e.getMessage());
 
 		}
-		return response;
+		return response; 
 	}
 
 

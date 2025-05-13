@@ -1,4 +1,4 @@
-package com.nit.model;
+package com.nit.jwtmodel;
 
 public class AuthenticationResponse  {
 
