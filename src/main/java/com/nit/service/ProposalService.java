@@ -31,6 +31,6 @@ public interface ProposalService {
 	public String exportDataIntoExcel(HttpServletResponse response) throws IOException;
      public String importExcel(MultipartFile file) throws IOException;
      public String excelBatchProcessing(MultipartFile file)throws IOException ;
-     public void batchProcessing() throws FileNotFoundException;
+     public void processBatchFiles() throws FileNotFoundException;
 
 }

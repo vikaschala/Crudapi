@@ -1,9 +1,7 @@
 package com.nit.serviceimpl;
 
 import java.io.File;
-
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -38,8 +36,8 @@ import com.nit.enumeration.Gender;
 import com.nit.enumeration.MaritalStatus;
 import com.nit.enumeration.Nationality;
 import com.nit.repository.NomineeRepo;
-import com.nit.repository.ProposalRepo;
 import com.nit.repository.ProcessingQueueRepo;
+import com.nit.repository.ProposalRepo;
 import com.nit.repository.UserImportLogRepo;
 import com.nit.service.ProposalService;
 
@@ -50,6 +48,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 
 
 @Service
@@ -176,7 +175,8 @@ public class ProposalServiceImpl implements ProposalService {
 			}
 		}
 		return "Proposal and nominee(s) saved successfully!";
-	} */// add proposal with annotation        
+	} 
+	*/ // add proposal with annotation        
 	public String addProposal(ProposalDto dto) {
 		List<String> errors = new ArrayList<>();
 		if (dto.getFirstName() == null || dto.getFirstName().isBlank())
@@ -289,35 +289,56 @@ public class ProposalServiceImpl implements ProposalService {
 	@Override
 	public List<ProposalDto> getAllActiveProposals() {
 
-		// Fetch all active proposals from the repository
-		List<Proposal> activeProposals = proposalRepo.findByStatus('N');
-		List<ProposalDto> proposalDtoList = new ArrayList<>();
+	    // Fetch all active proposals from the repository
+	    List<Proposal> activeProposals = proposalRepo.findByStatus('Y');
+	    List<ProposalDto> proposalDtoList = new ArrayList<>();
 
-		// Map each active proposal to ProposalDto
-		for (Proposal proposal : activeProposals) {
+	    // Map each active proposal to ProposalDto
+	    for (Proposal proposal : activeProposals) {
 
-			ProposalDto dto = new ProposalDto();
-			dto.setFirstName(proposal.getFirstName());
-			dto.setMiddleName(proposal.getMiddleName());
-			dto.setLastName(proposal.getLastName());
-			dto.setPanNumber(proposal.getPanNumber());
-			dto.setAnnualIncome(proposal.getAnnualIncome());
-			dto.setEmailId(proposal.getEmailId());
-			dto.setMobileNumber(proposal.getMobileNumber());
-			dto.setAlternateMobileNumber(proposal.getAlternateMobileNumber());
-			dto.setDateOfBirth(proposal.getDateOfBirth());
-			dto.setCity(proposal.getCity());
-			dto.setPincode(proposal.getPincode());
-			dto.setAddress(proposal.getAddress());
-			dto.setGender(proposal.getGender());
-			dto.setMaritalStatus(proposal.getMaritalStatus());
-			dto.setNationality(proposal.getNationality());
+	        ProposalDto dto = new ProposalDto();
+	        dto.setFirstName(proposal.getFirstName());
+	        dto.setMiddleName(proposal.getMiddleName());
+	        dto.setLastName(proposal.getLastName());
+	        dto.setPanNumber(proposal.getPanNumber());
+	        dto.setAnnualIncome(proposal.getAnnualIncome());
+	        dto.setEmailId(proposal.getEmailId());
+	        dto.setMobileNumber(proposal.getMobileNumber());
+	        dto.setAlternateMobileNumber(proposal.getAlternateMobileNumber());
+	        dto.setDateOfBirth(proposal.getDateOfBirth());
+	        dto.setCity(proposal.getCity());
+	        dto.setPincode(proposal.getPincode());
+	        dto.setAddress(proposal.getAddress());
+	        dto.setGender(proposal.getGender());
+	        dto.setMaritalStatus(proposal.getMaritalStatus());
+	        dto.setNationality(proposal.getNationality());
 
-			proposalDtoList.add(dto);
-		}
+	        // Fetch nominees for the proposal
+	        List<Nominee> nominees = proposal.getNominees(); // Assuming `getNominees()` fetches associated nominees
+	        List<NomineeDto> nomineeDtos = new ArrayList<>();
 
-		return proposalDtoList;
+	        // Map each nominee to NomineeDto
+	        for (Nominee nominee : nominees) {
+	            NomineeDto nomineeDto = new NomineeDto();
+	            nomineeDto.setFirstName(nominee.getFirstName());
+	            nomineeDto.setMiddleName(nominee.getMiddleName());
+	            nomineeDto.setLastName(nominee.getLastName());
+	            nomineeDto.setMobileNumber(nominee.getMobileNumber());
+	            nomineeDto.setRelationship(nominee.getRealtionship());
+
+	            nomineeDtos.add(nomineeDto);
+	        }
+
+	        // Add the nominee list to the proposalDto
+	        dto.setNominee(nomineeDtos);
+
+	        // Add the ProposalDto to the list
+	        proposalDtoList.add(dto);
+	    }
+
+	    return proposalDtoList;
 	}
+
 
 	@Override
 	public ProposalDto getByProposalId(Long id) {
@@ -923,182 +944,411 @@ public class ProposalServiceImpl implements ProposalService {
    
 	// Updated excelBatchProcessing method
 	@Override
-	public String excelBatchProcessing(MultipartFile file) throws IOException {
-	    Workbook workbook = new XSSFWorkbook(file.getInputStream());
-	    Sheet sheet = workbook.getSheetAt(0);
-	    int totalRow = sheet.getLastRowNum();
+	public String excelBatchProcessing(MultipartFile file)  throws IOException {
+		Workbook workbook = new XSSFWorkbook(file.getInputStream());
+		Sheet sheet = workbook.getSheetAt(0);
 
-	    if (totalRow > 5) {
-	        String folderPath = "C:\\Users\\HP\\Downloads\\";
-	        String shortUUID = "xyz_" + UUID.randomUUID().toString().substring(0, 8);
-	        String filePath = folderPath + shortUUID + "_Proposals.xlsx";
+		int totalRows = sheet.getLastRowNum();
+		int batchSize = 5;
 
-	        try (FileOutputStream outputStream = new FileOutputStream(filePath)) {
-	            workbook.write(outputStream);
-	        }
-	        workbook.close();
+		// If the file has more than 5 rows, queue the file for batch processing
+		if (totalRows > batchSize) {
+			String folderPath = "C:\\Users\\HP\\Downloads\\";
+			String shortUUID = "xyz_" + UUID.randomUUID().toString().substring(0, 8);
+			String filePath = folderPath + shortUUID + "Proposals.xlsx";
 
-	        ProcessingQueue queue = new ProcessingQueue();
-	        queue.setFilePath(filePath);
-	        queue.setTotalCount(0); // Initially zero
-	        queue.setIsProcessed("N");
-	        queue.setStatus("Y");
-	        queueRepo.save(queue);
+			// Save the workbook to a file
+			try (FileOutputStream out = new FileOutputStream(filePath)) {
+				workbook.write(out);
+			}
 
-	        return "File goes for batch processing";
-	    }
+			// Create and save a queue entry for batch processing
+			ProcessingQueue queTable = new ProcessingQueue();
+			queTable.setFilePath(filePath);
+			queTable.setTotalCount(totalRows);
+			queTable.setIsProcessed("N");
+			queTable.setRowRead(0);
+			queTable.setStatus("N");
+			queueRepo.save(queTable);
 
-	    for (int i = 1; i <= totalRow; i++) {
-	        Row row = sheet.getRow(i);
-	        if (row == null) continue;
+			return "File queued for batch processing";
+		}
 
-	        List<String> errors = new ArrayList<>();
-	        List<String> errorFields = new ArrayList<>();
+		// Process each row of the file
+		for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+			Row row = sheet.getRow(i);
+			if (row == null) 
+				continue;
 
-	        // Validation logic (same as below in batchProcessing)...
+			List<String> errors = new ArrayList<>();
+			List<String> errorFields = new ArrayList<>();
+			Proposal detailsEntity = new Proposal();
 
-	        // Perform validations
-	        String firstName = getStringValue(row.getCell(1));
-	        if (firstName.isEmpty()) {
-	            errors.add("FirstName is Empty");
-	            errorFields.add("FirstName");
-	        }
+			// Validate the row and populate the Proposal entity
+			validateProposalRow(row, errors, errorFields, detailsEntity);
 
-	        // ...continue other validations like you have in batchProcessing...
+			// If there are errors, save them; otherwise, save the successful record
+			if (!errors.isEmpty()) {
+				saveErrors(errors, errorFields, i);
+			} else {
+				proposalRepo.save(detailsEntity);
+				saveSuccess(i);
+			}
+		}
 
-	        if (!errors.isEmpty()) {
-	            for (int j = 0; j < errors.size(); j++) {
-	                UserImportLog log = new UserImportLog();
-	                log.setErrorMessage(errors.get(j));
-	                log.setErrorField(errorFields.get(j));
-	                log.setStatus("Fail");
-	                log.setRowNumber(i);
-	                log.setTimestamp(LocalDateTime.now());
-	                userImportLogRepository.save(log);
-	            }
-	        } else {
-	            Proposal p = new Proposal();
-	            p.setFirstName(firstName);
-	            p.setMiddleName(getStringValue(row.getCell(2)));
-	            p.setLastName(getStringValue(row.getCell(3)));
-	            p.setGender(Gender.valueOf(getStringValue(row.getCell(4))));
-	            p.setDateOfBirth(getLocalDateValue(row.getCell(5)));
-	            p.setPanNumber(getStringValue(row.getCell(6)));
-	            p.setAlternateMobileNumber(getLongValue(row.getCell(10)));
-	            p.setEmailId(getStringValue(row.getCell(9)));
-	            p.setMobileNumber(getLongValue(row.getCell(17)));
-	            p.setAddress(getStringValue(row.getCell(11)));
-	            p.setCity(getStringValue(row.getCell(15)));
-	            p.setPincode(getStringValue(row.getCell(14)));
-	            p.setMaritalStatus(MaritalStatus.valueOf(getStringValue(row.getCell(8))));
-
-	            proposalRepo.save(p);
-
-	            UserImportLog log = new UserImportLog();
-	            log.setErrorMessage("Row " + i + " Success");
-	            log.setStatus("Success");
-	            log.setRowNumber(i);
-	            log.setTimestamp(LocalDateTime.now());
-	            userImportLogRepository.save(log);
-	        }
-	    }
-
-	    workbook.close();
-	    return "Processing Completed";
+		return "Processing completed";
 	}
+	private void validateProposalRow(Row row, List<String> errors, List<String> errorFields, Proposal proposal) {
+		Cell firstNameCell = row.getCell(0);
+		if (firstNameCell == null || firstNameCell.getCellType() != CellType.STRING || firstNameCell.getStringCellValue().isEmpty()) {
+			errors.add("FirstName is empty");
+			errorFields.add("FirstName");
+		} else {
+			proposal.setFirstName(firstNameCell.getStringCellValue());
+		}
+
+		Cell middleNameCell = row.getCell(1);
+		if (middleNameCell == null || middleNameCell.getCellType() != CellType.STRING || middleNameCell.getStringCellValue().isEmpty()) {
+			errors.add("MiddleName is empty");
+			errorFields.add("MiddleName");
+		} else {
+			proposal.setMiddleName(middleNameCell.getStringCellValue());
+		}
+
+		Cell lastNameCell = row.getCell(2);
+		if (lastNameCell == null || lastNameCell.getCellType() != CellType.STRING || lastNameCell.getStringCellValue().isEmpty()) {
+			errors.add("LastName is empty");
+			errorFields.add("LastName");
+		} else {
+			proposal.setLastName(lastNameCell.getStringCellValue());
+		}
+
+		Cell panCell = row.getCell(3);
+		if (panCell == null || panCell.getCellType() != CellType.STRING || panCell.getStringCellValue().isEmpty() || !panCell.getStringCellValue().matches("[A-Z]{5}[0-9]{4}[A-Z]{1}")) {
+			errors.add("Invalid or empty PAN Number");
+			errorFields.add("PAN Number");
+		} else {
+			proposal.setPanNumber(panCell.getStringCellValue());
+		}
+
+		Cell incomeCell = row.getCell(4);
+		if (incomeCell == null || incomeCell.getCellType() != CellType.NUMERIC) {
+			errors.add("Invalid or empty Annual Income");
+			errorFields.add("Annual Income");
+		} else {
+			proposal.setAnnualIncome((long) incomeCell.getNumericCellValue());
+		}
+
+		Cell emailCell = row.getCell(5);
+		if (emailCell == null || emailCell.getCellType() != CellType.STRING || emailCell.getStringCellValue().isEmpty() || !emailCell.getStringCellValue().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+			errors.add("Invalid or empty Email ID");
+			errorFields.add("Email ID");
+		} else {
+			proposal.setEmailId(emailCell.getStringCellValue());
+		}
+
+		Cell mobileCell = row.getCell(6);
+		if (mobileCell == null || mobileCell.getCellType() != CellType.NUMERIC) {
+			errors.add("Invalid Mobile Number");
+			errorFields.add("Mobile Number");
+		} else {
+			long mobileNumber = (long) mobileCell.getNumericCellValue();
+			if (String.valueOf(mobileNumber).length() != 10) {
+				errors.add("Invalid Mobile Number");
+				errorFields.add("Mobile Number");
+			} else {
+				proposal.setMobileNumber(mobileNumber);
+			}
+		}
+
+		Cell altMobileCell = row.getCell(7);
+		if (altMobileCell != null && altMobileCell.getCellType() == CellType.NUMERIC) {
+			long altMobile = (long) altMobileCell.getNumericCellValue();
+			if (String.valueOf(altMobile).length() != 10) {
+				errors.add("Invalid Alternate Mobile Number");
+				errorFields.add("Alternate Mobile Number");
+			} else {
+				proposal.setAlternateMobileNumber(altMobile);
+			}
+		}
+
+		Cell dobCell = row.getCell(8);
+		if (dobCell == null || dobCell.getCellType() != CellType.NUMERIC) {
+			errors.add("Invalid or empty Date of Birth");
+			errorFields.add("Date of Birth");
+		} else {
+			proposal.setDateOfBirth(dobCell.getLocalDateTimeCellValue().toLocalDate());
+		}
+
+		Cell cityCell = row.getCell(9);
+		if (cityCell == null || cityCell.getCellType() != CellType.STRING || cityCell.getStringCellValue().isEmpty()) {
+			errors.add("City is empty");
+			errorFields.add("City");
+		} else {
+			proposal.setCity(cityCell.getStringCellValue());
+		}
+
+		Cell pinCell = row.getCell(10);
+		if (pinCell == null || pinCell.getCellType() != CellType.STRING || pinCell.getStringCellValue().isEmpty() || !pinCell.getStringCellValue().matches("\\d{6}")) {
+			errors.add("Invalid or empty Pincode");
+			errorFields.add("Pincode");
+		} else {
+			proposal.setPincode(pinCell.getStringCellValue());
+		}
+
+		Cell addressCell = row.getCell(11);
+		if (addressCell == null || addressCell.getCellType() != CellType.STRING || addressCell.getStringCellValue().isEmpty()) {
+			errors.add("Address is empty");
+			errorFields.add("Address");
+		} else {
+			proposal.setAddress(addressCell.getStringCellValue());
+		}
+
+		Cell genderCell = row.getCell(12);
+		if (genderCell == null || genderCell.getCellType() != CellType.STRING || genderCell.getStringCellValue().isEmpty()) {
+			errors.add("Invalid or empty Gender");
+			errorFields.add("Gender");
+		} else {
+			try {
+				proposal.setGender(Gender.valueOf(genderCell.getStringCellValue()));
+			} catch (Exception e) {
+				errors.add("Invalid Gender");
+				errorFields.add("Gender");
+			}
+		}
+
+		Cell maritalCell = row.getCell(13);
+		if (maritalCell == null || maritalCell.getCellType() != CellType.STRING || maritalCell.getStringCellValue().isEmpty()) {
+			errors.add("Invalid or empty Marital Status");
+			errorFields.add("Marital Status");
+		} else {
+			try {
+				proposal.setMaritalStatus(MaritalStatus.valueOf(maritalCell.getStringCellValue()));
+			} catch (Exception e) {
+				errors.add("Invalid Marital Status");
+				errorFields.add("Marital Status");
+			}
+		}
+
+		Cell nationalityCell = row.getCell(14);
+		if (nationalityCell == null || nationalityCell.getCellType() != CellType.STRING || nationalityCell.getStringCellValue().isEmpty()) {
+			errors.add("Invalid or empty Nationality");
+			errorFields.add("Nationality");
+		} else {
+			try {
+				proposal.setNationality(Nationality.valueOf(nationalityCell.getStringCellValue()));
+			} catch (Exception e) {
+				errors.add("Invalid Nationality");
+				errorFields.add("Nationality");
+			}
+		}
+	}
+
+	private void saveErrors(List<String> errors, List<String> errorFields, int rowIndex) {
+		for (int i = 0; i < errors.size(); i++) {
+			String errorMessage = errors.get(i);
+			String fieldName = errorFields.get(i);
+
+			System.out.println("Error in Row " + rowIndex + " - Field: " + fieldName + ", Message: " + errorMessage);
+
+			UserImportLog error = new UserImportLog ();
+			error.setRowNumber(rowIndex);
+			error.setErrorField(fieldName);
+			error.setErrorMessage(errorMessage);
+
+			userImportLogRepository.save(error);
+		}
+	}
+
+
+	// Save success information for valid rows
+	private void saveSuccess(int rowIndex) {
+		// Log or save the success (could save to a database or log system)
+		System.out.println("Row " + rowIndex + " processed successfully");
+
+		// Create an instance of ProcessingQueue for success logging
+		ProcessingQueue success = new ProcessingQueue();
+
+		// Assuming you want to update the rowRead or any other field related to success
+		success.setRowRead(rowIndex);  // Set the processed row index
+		success.setStatus("Processed");  // Assuming 'Processed' is a status for successful rows
+		success.setIsProcessed("Y");    // Set to 'Y' (Yes) for processed
+
+		// Save success information to the database using the appropriate repository
+		queueRepo.save(success); // Assuming successRepo is your repository for successes
+	}
+
 	@Scheduled(fixedDelay = 5000)
-	@Override
-	public void batchProcessing() throws FileNotFoundException {
-		List<ProcessingQueue> pendingQueues = queueRepo.findByIsProcessedAndTotalCountLessThan("NO", 500);
+	@Transactional
+	public void processBatchFiles() {
+		List<ProcessingQueue> batchQueues = queueRepo.findByIsProcessedAndTotalCountLessThan("N", 100);
 
+		for (ProcessingQueue queue : batchQueues) {
+			queueRepo.save(queue); // Save queue before processing
 
-	    for (ProcessingQueue queue : pendingQueues) {
-	        try (FileInputStream fis = new FileInputStream(queue.getFilePath());
-	             Workbook workbook = new XSSFWorkbook(fis)) {
+			try (FileInputStream fis = new FileInputStream(queue.getFilePath());
+					Workbook workbook = new XSSFWorkbook(fis)) {
 
-	            Sheet sheet = workbook.getSheetAt(0);
-	            int rowStart = queue.getTotalCount() + 1;
-	            int totalRow = sheet.getLastRowNum();
-	            int batchSize = 3;
+				Sheet sheet = workbook.getSheetAt(0);
+				int rowStart = queue.getIsProcessed().equals("N") ? queue.getRowRead() + 1 : queue.getTotalCount();
 
-	            for (int i = rowStart; i <= totalRow && i < rowStart + batchSize; i++) {
-	                Row row = sheet.getRow(i);
-	                if (row == null) continue;
+				Row headerRow = sheet.getRow(0);
+				if (rowStart == 1) {
+					int lastCol = headerRow.getLastCellNum();
+					headerRow.createCell(lastCol).setCellValue("Error Message");
+					headerRow.createCell(lastCol + 1).setCellValue("Error Status");
+				}
 
-	                List<String> errors = new ArrayList<>();
-	                List<String> errorFields = new ArrayList<>();
+				for (int i = rowStart; i <= queue.getTotalCount(); i++) {
+					if (i >= rowStart + 3) break; // Batch size of 3
 
-	                String firstName = getStringValue(row.getCell(1));
-	                if (firstName.isEmpty()) {
-	                    errors.add("FirstName is Empty");
-	                    errorFields.add("FirstName");
-	                }
+					Row row = sheet.getRow(i);
+					if (row == null) continue;
 
-	                // Continue all your validations same as in excelBatchProcessing...
+					List<String> errors = new ArrayList<>();
+					List<String> errorFields = new ArrayList<>();
 
-	                if (!errors.isEmpty()) {
-	                    for (int j = 0; j < errors.size(); j++) {
-	                        UserImportLog log = new UserImportLog();
-	                        log.setErrorMessage(errors.get(j));
-	                        log.setErrorField(errorFields.get(j));
-	                        log.setStatus("Fail");
-	                        log.setRowNumber(i);
-	                        log.setTimestamp(LocalDateTime.now());
-	                        userImportLogRepository.save(log);
-	                    }
-	                } else {
-	                    Proposal p = new Proposal();
-	                    p.setFirstName(firstName);
-	                    p.setMiddleName(getStringValue(row.getCell(2)));
-	                    p.setLastName(getStringValue(row.getCell(3)));
-	                    String genderValue = getStringValue(row.getCell(4));
-	                    try {
-	                        p.setGender(Gender.valueOf(genderValue.toUpperCase())); // Make it case-insensitive
-	                    } catch (IllegalArgumentException e) {
-	                        // Handle invalid gender value
-	                        System.out.println("Invalid gender value: " + genderValue);
-	                    }
+					Proposal proposal = new Proposal();
 
-	                    p.setDateOfBirth(getLocalDateValue(row.getCell(5)));
-	                    p.setPanNumber(getStringValue(row.getCell(6)));
-	                    p.setAlternateMobileNumber(getLongValue(row.getCell(10)));
-	                    p.setEmailId(getStringValue(row.getCell(9)));
-	                    p.setMobileNumber(getLongValue(row.getCell(17)));
-	                    p.setAddress(getStringValue(row.getCell(11)));
-	                    p.setCity(getStringValue(row.getCell(15)));
-	                    p.setPincode(getStringValue(row.getCell(14)));
-	                    String maritalStatusValue = getStringValue(row.getCell(8));
-	                    try {
-	                        p.setMaritalStatus(MaritalStatus.valueOf(maritalStatusValue.toUpperCase())); // Making it case-insensitive
-	                    } catch (IllegalArgumentException e) {
-	                        // Handle invalid marital status value
-	                        System.out.println("Invalid marital status value: " + maritalStatusValue);
-	                    }
+					// Validate First Name
+					String firstName = getCellValueAsString(row.getCell(1));
+					if (firstName.isEmpty()) {
+						errors.add("FirstName is Empty");
+						errorFields.add("FirstName");
+					} else {
+						proposal.setFirstName(firstName);
+					}
 
+					// Validate PAN Number
+					String pan = getCellValueAsString(row.getCell(6));
+					if (!pan.matches("[A-Z]{5}[0-9]{4}[A-Z]{1}")) {
+						errors.add("Invalid PAN format");
+						errorFields.add("PanNumber");
+					} else if (proposalRepo.existsByPanNumber(pan)) {
+						errors.add("PAN Already Exists");
+						errorFields.add("PanNumber");
+					} else {
+						proposal.setPanNumber(pan);
+					}
 
-	                    proposalRepo.save(p);
+					// Validate Email
+					String email = getCellValueAsString(row.getCell(9));
+					if (email.isEmpty()) {
+						errors.add("Email is Empty");
+						errorFields.add("EmailId");
+					} else if (proposalRepo.existsByEmailId(email)) {
+						errors.add("Email Already Exists");
+						errorFields.add("EmailId");
+					} else {
+						proposal.setEmailId(email);
+					}
 
-	                    UserImportLog log = new UserImportLog();
-	                    log.setErrorMessage("Row " + i + " Success");
-	                    log.setStatus("Success");
-	                    log.setRowNumber(i);
-	                    log.setTimestamp(LocalDateTime.now());
-	                    userImportLogRepository.save(log);
-	                }
+					// Validate Mobile Number
+					Long mobile = getCellLongValue(row.getCell(17));
+					if (mobile == null || mobile.toString().length() != 10) {
+						errors.add("Invalid Mobile Number");
+						errorFields.add("MobileNumber");
+					} else if (proposalRepo.existsByMobileNumber(mobile)) {
+						errors.add("Mobile Number Already Exists");
+						errorFields.add("MobileNumber");
+					} else {
+						proposal.setMobileNumber(mobile);
+					}
 
-	                queue.setTotalCount(i);
-	            }
+					// Handle errors
+					if (!errors.isEmpty()) {
+						for (int j = 0; j < errors.size(); j++) {
+							logError(errors.get(j), errorFields.get(j), "Fail", i);
+						}
 
-	            if (queue.getTotalCount() >= totalRow) {
-	                queue.setIsProcessed("Y");
-	                queue.setStatus("N");
-	            }
+						updateRowWithError(row, headerRow, errors);
 
-	            queueRepo.save(queue);
-	        } catch (IOException e) {
-	            // Log or rethrow
-	            e.printStackTrace();
-	        }
-	    }
+					} else {
+						Proposal saved = proposalRepo.save(proposal);
+						logSuccess(saved.getId(), i);
+
+						updateRowWithSuccess(row, headerRow, saved.getId());
+					}
+
+					queue.setRowRead(i);
+				}
+
+				// Mark as processed if all rows are done
+				if (queue.getRowRead() >= queue.getTotalCount()) {
+					queue.setIsProcessed("Y");
+				}
+
+				// Save workbook changes
+				try (FileOutputStream out = new FileOutputStream(queue.getFilePath())) {
+					workbook.write(out);
+				}
+
+				queueRepo.save(queue); // Save the updated queue status
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private void logError(String errorMessage, String errorField, String status, int rowIndex) {
+		UserImportLog log = new UserImportLog();
+		log.setErrorMessage(errorMessage);
+		log.setErrorField(errorField);
+		log.setStatus(status);
+		log.setRowNumber(rowIndex);
+		userImportLogRepository.save(log);
+	}
+
+	private void logSuccess(Long proposalId, int rowIndex) {
+		UserImportLog successLog = new UserImportLog();
+		successLog.setErrorMessage("Saved Proposal ID: " + proposalId);
+		successLog.setStatus("Success");
+		successLog.setRowNumber( rowIndex);
+		userImportLogRepository.save(successLog);
+	}
+
+	private void updateRowWithError(Row row, Row headerRow, List<String> errors) {
+		int lastCol = headerRow.getLastCellNum();
+		Cell errorMessage = row.createCell(lastCol - 2);
+		Cell errorStatus = row.createCell(lastCol - 1);
+		errorMessage.setCellValue(String.join(",", errors));
+		errorStatus.setCellValue("Fail");
+	}
+
+	private void updateRowWithSuccess(Row row, Row headerRow, Long savedProposalId) {
+		int lastCol = headerRow.getLastCellNum();
+		Cell errorMessage = row.createCell(lastCol - 2);
+		Cell errorStatus = row.createCell(lastCol - 1);
+		errorMessage.setCellValue("Saved Proposal ID: " + savedProposalId);
+		errorStatus.setCellValue("Success");
+	}
+
+	private String getCellValueAsString(Cell cell) {
+		if (cell == null) {
+			return "";
+		}
+		if (cell.getCellType() == CellType.STRING) {
+			return cell.getStringCellValue().trim();
+		} else if (cell.getCellType() == CellType.NUMERIC) {
+			return String.valueOf((long) cell.getNumericCellValue());
+		}
+		return "";
+	}
+
+	private Long getCellLongValue(Cell cell) {
+		if (cell == null) {
+			return null;
+		}
+		if (cell.getCellType() == CellType.NUMERIC) {
+			return (long) cell.getNumericCellValue();
+		} else if (cell.getCellType() == CellType.STRING) {
+			try {
+				return Long.parseLong(cell.getStringCellValue().trim());
+			} catch (NumberFormatException e) {
+				return null; // Handle gracefully
+			}
+		}
+		return null;
 	}
 }

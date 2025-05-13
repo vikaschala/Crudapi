@@ -1,12 +1,17 @@
 package com.nit.rest;
 
-import java.awt.PageAttributes.MediaType;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,10 +23,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.nit.JwtUtil.JwtUtil;
 import com.nit.dto.ProposalDto;
 import com.nit.entity.Proposal;
 import com.nit.entity.UserFilter;
 import com.nit.entity.UserListing;
+import com.nit.model.AuthenticationRequest;
+import com.nit.model.AuthenticationResponse;
 import com.nit.repository.ProposalRepo;
 import com.nit.responsehandler.ResponseHandler;
 import com.nit.service.ProposalService;
@@ -33,12 +41,44 @@ import jakarta.servlet.http.HttpServletResponse;
 @RequestMapping("/proposals")
 public class ProposalController {
 
-	@Autowired
+	@Autowired      
 	private ProposalService proposalService;
 
 	@Autowired
 	private ProposalRepo proposalRepo;
+	  @Autowired
+	    private AuthenticationManager authenticationManager;
 
+	    @Autowired
+	    private UserDetailsService userDetailsService; 
+
+	    @Autowired
+	    private JwtUtil jwtTokenUtil; 
+
+	    @PostMapping("/authenticate")
+	    public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) {
+	        try {
+	         
+	            authenticationManager.authenticate(
+	                new UsernamePasswordAuthenticationToken(
+	                	
+	                    authenticationRequest.getUsername(), 
+	                    authenticationRequest.getPassword()
+	                 
+	                )
+	               
+	            );
+	        } catch (BadCredentialsException e) {
+	          
+	          throw new IllegalArgumentException("Incorrect username or password\", HttpStatus.UNAUTHORIZED");
+	        }
+
+	        final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
+
+	        final String jwt = jwtTokenUtil.generateToken(userDetails);
+
+	        return ResponseHandler.generateResponse("Authentication successful", HttpStatus.OK, new AuthenticationResponse(jwt));
+	    }
 
 	@PostMapping("/add")
 	public ResponseHandler createProposal(@RequestBody ProposalDto dto) {
