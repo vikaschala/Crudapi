@@ -30,12 +30,16 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
-   
         final String authorizationHeader = request.getHeader("Authorization");
 
+        String path = request.getRequestURI();
         String username = null;
         String jwt = null;
-
+        if (path.startsWith("/auth/register") || path.startsWith("/auth/login")
+                || path.startsWith("/swagger") || path.startsWith("/v3/api-docs")) {
+                chain.doFilter(request, response);
+                return;
+            }
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
             username = jwtUtil.extractUsername(jwt);
@@ -49,9 +53,14 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            } else {
+                // Send Unauthorized response if token is invalid
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
+                return; // Don't proceed further if authentication fails
             }
         }
 
         chain.doFilter(request, response);
     }
+
 }

@@ -2,6 +2,7 @@ package com.nit.repository;
 
 import java.util.List;
 
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,6 +14,5 @@ public interface ProposalRepo extends JpaRepository<Proposal, Long> {
     boolean existsByEmailId(String emailId);
     boolean existsByMobileNumber(Long number);
     boolean existsByPanNumber(String panNumber);
-
 
 }

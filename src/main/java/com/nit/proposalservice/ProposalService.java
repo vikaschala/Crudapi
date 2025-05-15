@@ -1,4 +1,4 @@
-package com.nit.jwtservice;
+package com.nit.proposalservice;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -7,9 +7,9 @@ import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.nit.dto.ProposalDto;
+import com.nit.dto.UserListing;
 import com.nit.entity.Proposal;
 import com.nit.entity.UserFilter;
-import com.nit.entity.UserListing;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -32,5 +32,5 @@ public interface ProposalService {
      public String importExcel(MultipartFile file) throws IOException;
      public String excelBatchProcessing(MultipartFile file)throws IOException ;
      public void processBatchFiles() throws FileNotFoundException;
-
+  
 }

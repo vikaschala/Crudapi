@@ -1,7 +1,6 @@
 package com.nit.responsehandler;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+
 
 public class ResponseHandler {
 
@@ -9,9 +8,12 @@ public class ResponseHandler {
     private boolean status;
     private Object data;
     private Integer totalRecord;
+    private String username;
+    private String password;
+    private String emailId;
 
  
-    public boolean isStatus() {
+	public boolean isStatus() {
         return status;
     }
 
@@ -43,23 +45,48 @@ public class ResponseHandler {
         this.totalRecord = totalRecord;
     }
 
- 
-    public static ResponseEntity<Object> generateResponse(String message, HttpStatus status, Object responseObj) {
-        ResponseHandler response = new ResponseHandler();
-        response.setMessage(message);
-        response.setStatus(true);
-        response.setData(responseObj);
-        response.setTotalRecord(null); 
-        return new ResponseEntity<>(response, status);
-    }
+	public String getUsername() {
+		return username;
+	}
 
+	public void setUsername(String username) {
+		this.username = username;
+	}
 
-    public static ResponseEntity<Object> generateErrorResponse(String message, HttpStatus status) {
-        ResponseHandler response = new ResponseHandler();
-        response.setMessage(message);
-        response.setStatus(false);
-        response.setData(null);
-        response.setTotalRecord(0);
-        return new ResponseEntity<>(response, status);
-    }
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public String getEmailId() {
+		return emailId;
+	}
+
+	public void setEmailId(String emailId) {
+		this.emailId = emailId;
+	}
+    
+
+// 
+//    public static ResponseEntity<Object> generateResponse(String message, HttpStatus status, Object responseObj) {
+//        ResponseHandler response = new ResponseHandler();
+//        response.setMessage(message);
+//        response.setStatus(true);
+//        response.setData(responseObj);
+//        response.setTotalRecord(null); 
+//        return new ResponseEntity<>(response, status);
+//    }
+//
+//
+//    public static ResponseEntity<Object> generateErrorResponse(String message, HttpStatus status) {
+//        ResponseHandler response = new ResponseHandler();
+//        response.setMessage(message);
+//        response.setStatus(false);
+//        response.setData(null);
+//        response.setTotalRecord(0);
+//        return new ResponseEntity<>(response, status);
+//    }
 }

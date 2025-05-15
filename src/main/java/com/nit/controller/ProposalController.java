@@ -1,17 +1,14 @@
 package com.nit.controller;
 
 import java.io.IOException;
+import java.sql.Date;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,16 +22,15 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.nit.JwtUtil.JwtUtil;
 import com.nit.dto.ProposalDto;
+import com.nit.dto.UserListing;
 import com.nit.entity.Proposal;
 import com.nit.entity.UserFilter;
-import com.nit.entity.UserListing;
-import com.nit.jwtmodel.AuthenticationRequest;
-import com.nit.jwtmodel.AuthenticationResponse;
-import com.nit.jwtservice.ProposalService;
+import com.nit.proposalservice.ProposalService;
 import com.nit.repository.ProposalRepo;
 import com.nit.responsehandler.ResponseHandler;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
@@ -46,8 +42,10 @@ public class ProposalController {
 
 	@Autowired
 	private ProposalRepo proposalRepo;
-  
 
+	@Autowired
+	private JwtUtil jwtUtil;
+	
 	@PostMapping("/add")
 	public ResponseHandler createProposal(@RequestBody ProposalDto dto) {
 		ResponseHandler response = new ResponseHandler();
@@ -72,36 +70,124 @@ public class ProposalController {
 		return response; 
 	}
 
+/*	@GetMapping("/report")
+	public ResponseHandler getAllProposals(HttpServletRequest request) {
+	    ResponseHandler response = new ResponseHandler();
 
+	    try {
+	        // 1. Extract and validate the Authorization header
+	        String header = request.getHeader("Authorization");
+	        if (header == null || !header.startsWith("Bearer ")) {
+	            response.setStatus(false);
+	            response.setMessage("Missing or invalid Authorization header");
+	            return response;
+	        }
+	        String token = header.substring(7).trim();
+                
+	        // 2. Parse the token and extract claims
+	        String firstName, lastName, emailId, mobileNumber, panNumber;
+	        java.util.Date expiresAt;
+	        try {
+	            firstName    = jwtUtil.extractFirstName(token);
+	            lastName     = jwtUtil.extractLastName(token);
+	            emailId      = jwtUtil.extractEmailId(token);
+	            mobileNumber = jwtUtil.extractMobileNumber(token);
+	            panNumber    = jwtUtil.extractPanNumber(token);
+	            expiresAt    = jwtUtil.extractExpiration(token);
+	        } catch (Exception parseEx) {
+	            parseEx.printStackTrace();
+	            response.setStatus(false);
+	            response.setMessage("Failed to parse token: " + parseEx.getMessage());
+	            return response;
+	        }
+
+	        // 3. Fetch all active proposals
+	        List<ProposalDto> proposals;
+	        try {
+	            proposals = proposalService.getAllActiveProposals();
+	            if (proposals == null) {
+	                proposals = Collections.emptyList();
+	            }
+	        } catch (Exception svcEx) {
+	            svcEx.printStackTrace();
+	            response.setStatus(false);
+	            response.setMessage("Failed to fetch proposals: " + svcEx.getMessage());
+	            return response;
+	        }
+
+	        // 4. Build the response payload
+	        Map<String, Object> data = new HashMap<>();
+	        data.put("tokenExpiresAt", expiresAt);
+	        data.put("tokenClaims", Map.of(
+	            "firstName", firstName,
+	            "lastName", lastName,
+	            "emailId", emailId,
+	            "mobileNumber", mobileNumber,
+	            "panNumber", panNumber
+	        ));
+	        data.put("proposals", proposals);
+
+	        response.setStatus(true);
+	        response.setData(data);
+	        response.setMessage("Proposals + token info fetched successfully");
+
+	    } catch (Exception e) {
+	        // Fallback for any other unexpected error
+	        e.printStackTrace();
+	        response.setStatus(false);
+	        response.setMessage("Unexpected error: " + e.getMessage());
+	    }
+
+	    return response;
+	}
+    */
 	@GetMapping("/report")
-	public ResponseHandler getAllProposals() {
-		ResponseHandler response = new ResponseHandler();
-		try {
-			List<ProposalDto> proposals = proposalService.getAllActiveProposals();
-			response.setStatus(true);
-			response.setData(proposals);
-			System.out.println(proposals);
-			response.setMessage("All proposals fetched successfully");
-		} catch (Exception e) {
-			response.setStatus(false);
-			response.setMessage(e.getMessage());
-			e.printStackTrace();
-		}
-		return response;
+	public ResponseHandler getAllProposals(HttpServletRequest request) {
+	    ResponseHandler response = new ResponseHandler();
+
+	    try {
+	        // Step 1: Get Authorization header
+	        String authHeader = request.getHeader("Authorization");
+	        if (authHeader != null && !authHeader.startsWith("Bearer ")) {
+	           
+	        
+
+	        // Step 2: Extract token
+	        String token = authHeader.substring(7);
+
+	        // Step 3: Use jwtUtil to extract claims
+	        String emailId = jwtUtil.extractEmailId(token);        // from your custom method
+	        String fullName = jwtUtil.extractFullName(token);      // optional
+	        String role = jwtUtil.extractUserRole(token);          // optional
+
+	        // Step 4: Get data from DB
+	      response.setEmailId(emailId);
+	    
+
+	        }
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        response.setStatus(false);
+	        response.setMessage("Unexpected error: " + e.getMessage());
+	        response.setData(null);
+	        response.setTotalRecord(0);
+	    }
+
+	    return response;
 	}
 
-
-	@GetMapping("/list_by_id/{id}")
+	@GetMapping("/list/{id}")
 	public ResponseHandler getProposalById(@PathVariable Long id) {
 		ResponseHandler response = new ResponseHandler();
 		try {
-			ProposalDto proposal = proposalService.getByProposalId(id);
-			if (proposal == null) {
+			ProposalDto proposalDto = proposalService.getByProposalId(id);
+			if (proposalDto == null) {
 				response.setStatus(false);
 				response.setMessage("Proposal not found");
 			} else {
 				response.setStatus(true);
-				response.setData(proposal);
+				response.setData(proposalDto);
 				response.setMessage("Proposal fetched successfully");
 			}
 		} catch (Exception e) {
@@ -113,7 +199,7 @@ public class ProposalController {
 		return response;
 	}
 
-	@PutMapping("/update_by_id/{id}")
+	@PutMapping("/update/proposal_info/{id}")
 	public ResponseHandler updateProposal(@PathVariable Long id, @RequestBody ProposalDto dto) {
 		ResponseHandler response = new ResponseHandler();
 		try {
@@ -134,7 +220,7 @@ public class ProposalController {
 		return response;
 	}
 
-	@DeleteMapping("/delete_by_id/{id}")
+	@DeleteMapping("/list/{id}")
 	public ResponseHandler deleteById(@PathVariable Long id) {
 		ResponseHandler response = new ResponseHandler();
 		try {
@@ -150,7 +236,7 @@ public class ProposalController {
 		}
 		return response;
 	}
-	@PostMapping("/pagination")
+	@PostMapping("/listing")
 	public ResponseHandler getProposers(@RequestBody UserListing listing) {
 		ResponseHandler response = new ResponseHandler();
 		try {
@@ -185,14 +271,14 @@ public class ProposalController {
 		}
 		return response;
 	}
-	
-	
-	
-	@GetMapping("/fileExport")
+
+
+
+	@GetMapping("/export_excel")
 	public ResponseHandler exportProposersToExcel(HttpServletResponse response) throws IOException,ServletException{
 		ResponseHandler handler = new ResponseHandler();
 		try {
-			
+
 			String filepath = proposalService.exportDataIntoExcel(response);
 			handler.setMessage("File exported successfully.");
 			handler.setStatus(true);
@@ -205,49 +291,49 @@ public class ProposalController {
 
 		return handler;
 	}
-	@PostMapping(value = "/upload", consumes = "multipart/form-data")
+	@PostMapping(value = "/import_excel", consumes = "multipart/form-data")
 	public ResponseHandler importProposalsFromExcel(@RequestParam("file") MultipartFile file) throws IOException {
-	    ResponseHandler handler = new ResponseHandler();
+		ResponseHandler handler = new ResponseHandler();
 
-	    if (file.isEmpty()) {
-	        handler.setStatus(false);
-	        handler.setMessage("Uploaded file is empty.");
-	        return handler;
-	    }
-	    try {
-	        String result = proposalService.importExcel(file);
-	        handler.setStatus(true);
-	        handler.setMessage("File imported successfully.");
-	        handler.setData(result); // Assuming you have a setData method
-	    } catch (Exception e) {
-	        handler.setStatus(false);
-	        handler.setMessage("Error occurred while importing file: " + e.getMessage());
-	    }
+		if (file.isEmpty()) {
+			handler.setStatus(false);
+			handler.setMessage("Uploaded file is empty.");
+			return handler;
+		}
+		try {
+			String result = proposalService.importExcel(file);
+			handler.setStatus(true);
+			handler.setMessage("File imported successfully.");
+			handler.setData(result); // Assuming you have a setData method
+		} catch (Exception e) {
+			handler.setStatus(false);
+			handler.setMessage("Error occurred while importing file: " + e.getMessage());
+		}
 
-	    return handler;
+		return handler;
 	}
-	
-	
-	 @PostMapping(value = "/upload1", consumes = "multipart/form-data")
-	    public ResponseHandler uploadExcel(@RequestParam("file") MultipartFile file) {
-	        ResponseHandler response = new ResponseHandler();
 
-	        if (file.isEmpty()) {
-	            response.setStatus(false);
-	            response.setMessage("Uploaded file is empty.");
-	            return response;
-	        }
 
-	        try {
-	            String result = proposalService.excelBatchProcessing(file);
-	            response.setStatus(true);
-	            response.setMessage("File queued for batch processing.");
-	            response.setData(result);
-	        } catch (IOException e) {
-	            response.setStatus(false);
-	            response.setMessage("Error processing file: " + e.getMessage());
-	        }
+	@PostMapping(value = "/import_excel_batch", consumes = "multipart/form-data")
+	public ResponseHandler uploadExcel(@RequestParam("file") MultipartFile file) {
+		ResponseHandler response = new ResponseHandler();
 
-	        return response;
-	    }
+		if (file.isEmpty()) {
+			response.setStatus(false);
+			response.setMessage("Uploaded file is empty.");
+			return response;
+		}
+
+		try {
+			String result = proposalService.excelBatchProcessing(file);
+			response.setStatus(true);
+			response.setMessage("File queued for batch processing.");
+			response.setData(result);
+		} catch (IOException e) {
+			response.setStatus(false);
+			response.setMessage("Error processing file: " + e.getMessage());
+		}
+
+		return response;
+	}
 }

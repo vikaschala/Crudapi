@@ -1,4 +1,6 @@
-package com.nit.entity;
+package com.nit.dto;
+
+import com.nit.entity.UserFilter;
 
 public class UserListing {
 

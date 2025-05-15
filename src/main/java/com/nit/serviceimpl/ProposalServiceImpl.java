@@ -26,16 +26,16 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.nit.dto.NomineeDto;
 import com.nit.dto.ProposalDto;
+import com.nit.dto.UserListing;
 import com.nit.entity.Nominee;
 import com.nit.entity.ProcessingQueue;
 import com.nit.entity.Proposal;
 import com.nit.entity.UserFilter;
 import com.nit.entity.UserImportLog;
-import com.nit.entity.UserListing;
 import com.nit.enumeration.Gender;
 import com.nit.enumeration.MaritalStatus;
 import com.nit.enumeration.Nationality;
-import com.nit.jwtservice.ProposalService;
+import com.nit.proposalservice.ProposalService;
 import com.nit.repository.NomineeRepo;
 import com.nit.repository.ProcessingQueueRepo;
 import com.nit.repository.ProposalRepo;
@@ -177,95 +177,95 @@ public class ProposalServiceImpl implements ProposalService {
 		return "Proposal and nominee(s) saved successfully!";
 	} 
 	*/ // add proposal with annotation        
-	public String addProposal(ProposalDto dto) {
+	public String addProposal(ProposalDto proposalDto) {
 		List<String> errors = new ArrayList<>();
-		if (dto.getFirstName() == null || dto.getFirstName().isBlank())
+		if (proposalDto.getFirstName() == null || proposalDto.getFirstName().isBlank())
 			errors.add("First name is required");
 
-		if (dto.getMiddleName() == null || dto.getMiddleName().isEmpty())
+		if (proposalDto.getMiddleName() == null || proposalDto.getMiddleName().isEmpty())
 			errors.add("Middle name is required");
 
-		if (dto.getLastName() == null || dto.getLastName().isEmpty())
+		if (proposalDto.getLastName() == null || proposalDto.getLastName().isEmpty())
 			errors.add("Last name is required");
 
-		if (dto.getPanNumber() == null || dto.getPanNumber().isEmpty() || 
-				!dto.getPanNumber().matches("[A-Z]{5}[0-9]{4}[A-Z]{1}"))
+		if (proposalDto.getPanNumber() == null || proposalDto.getPanNumber().isEmpty() || 
+				!proposalDto.getPanNumber().matches("[A-Z]{5}[0-9]{4}[A-Z]{1}"))
 			errors.add("Invalid PAN number format");
 
-		if (dto.getAnnualIncome() == null || dto.getAnnualIncome() < 10000)
+		if (proposalDto.getAnnualIncome() == null || proposalDto.getAnnualIncome() < 10000)
 			errors.add("Annual income must be at least 10,000");
 
-		if (dto.getEmailId() == null || dto.getEmailId().isBlank() || 
-				!dto.getEmailId().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$"))
+		if (proposalDto.getEmailId() == null || proposalDto.getEmailId().isBlank() || 
+				!proposalDto.getEmailId().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$"))
 			errors.add("Invalid email format");
 
-		if (dto.getMobileNumber() == null || 
-				!dto.getMobileNumber().toString().matches("^91[789]\\d{9}$"))
+		if (proposalDto.getMobileNumber() == null || 
+				!proposalDto.getMobileNumber().toString().matches("^91[789]\\d{9}$"))
 			errors.add("Invalid mobile number");
 
-		if (dto.getAlternateMobileNumber() == null || 
-				!dto.getAlternateMobileNumber().toString().matches("^91[789]\\d{9}$"))
+		if (proposalDto.getAlternateMobileNumber() == null || 
+				!proposalDto.getAlternateMobileNumber().toString().matches("^91[789]\\d{9}$"))
 			errors.add("Invalid alternate mobile number");
 
-		if (dto.getDateOfBirth() == null || dto.getDateOfBirth().isAfter(LocalDate.now()))
+		if (proposalDto.getDateOfBirth() == null || proposalDto.getDateOfBirth().isAfter(LocalDate.now()))
 			errors.add("Date of Birth cannot be in the future");
 
-		if (dto.getCity() == null || dto.getCity().isEmpty())
+		if (proposalDto.getCity() == null || proposalDto.getCity().isEmpty())
 			errors.add("City cannot be empty");
 
-		if (dto.getPincode() == null || !dto.getPincode().matches("^[1-9][0-9]{5}$"))
+		if (proposalDto.getPincode() == null || !proposalDto.getPincode().matches("^[1-9][0-9]{5}$"))
 			errors.add("Invalid pincode");
 
-		if (dto.getAddress() == null || dto.getAddress().isEmpty())
+		if (proposalDto.getAddress() == null || proposalDto.getAddress().isEmpty())
 			errors.add("Address cannot be empty");
 
-		if (dto.getGender() == null)
+		if (proposalDto.getGender() == null)
 			errors.add("Gender cannot be null");
 
-		if (dto.getMaritalStatus() == null)
+		if (proposalDto.getMaritalStatus() == null)
 			errors.add("Marital status cannot be null");
 
-		if (dto.getNationality() == null)
+		if (proposalDto.getNationality() == null)
 			errors.add("Nationality cannot be null");
 
 		if (!errors.isEmpty()) {
 			throw new IllegalArgumentException(String.join(", ", errors));
 		}
 		//Duplicate Check
-		if (proposalRepo.existsByEmailId(dto.getEmailId())) {
-			throw new IllegalArgumentException("Email ID " + dto.getEmailId() + " is already in use.");
+		if (proposalRepo.existsByEmailId(proposalDto.getEmailId())) {
+			throw new IllegalArgumentException("Email ID " + proposalDto.getEmailId() + " is already in use.");
 		}
 
-		if (proposalRepo.existsByMobileNumber(dto.getMobileNumber())) {
-			throw new IllegalArgumentException("Mobile number " + dto.getMobileNumber() + " is already in use.");
+		if (proposalRepo.existsByMobileNumber(proposalDto.getMobileNumber())) {
+			throw new IllegalArgumentException("Mobile number " + proposalDto.getMobileNumber() + " is already in use.");
 		}
 
-		if (proposalRepo.existsByPanNumber(dto.getPanNumber())) {
-			throw new IllegalArgumentException("PAN number " + dto.getPanNumber() + " is already in use.");
+		if (proposalRepo.existsByPanNumber(proposalDto.getPanNumber())) {
+			throw new IllegalArgumentException("PAN number " + proposalDto.getPanNumber() + " is already in use.");
 		}
 
 		// === SETTING VALUES ===
 		Proposal proposal = new Proposal();
-		proposal.setFirstName(dto.getFirstName());
-		proposal.setMiddleName(dto.getMiddleName());
-		proposal.setLastName(dto.getLastName());
-		proposal.setPanNumber(dto.getPanNumber());
-		proposal.setAnnualIncome(dto.getAnnualIncome());
-		proposal.setEmailId(dto.getEmailId());
-		proposal.setMobileNumber(dto.getMobileNumber());
-		proposal.setAlternateMobileNumber(dto.getAlternateMobileNumber());
-		proposal.setDateOfBirth(dto.getDateOfBirth());
-		proposal.setCity(dto.getCity());
-		proposal.setPincode(dto.getPincode());
-		proposal.setAddress(dto.getAddress());
-		proposal.setGender(dto.getGender());
-		proposal.setMaritalStatus(dto.getMaritalStatus());
-		proposal.setNationality(dto.getNationality());
+		proposal.setFirstName(proposalDto.getFirstName());
+		proposal.setMiddleName(proposalDto.getMiddleName());
+		proposal.setLastName(proposalDto.getLastName());
+		proposal.setPanNumber(proposalDto.getPanNumber());
+		proposal.setAnnualIncome(proposalDto.getAnnualIncome());
+		proposal.setEmailId(proposalDto.getEmailId());
+		proposal.setMobileNumber(proposalDto.getMobileNumber());
+		proposal.setAlternateMobileNumber(proposalDto.getAlternateMobileNumber());
+		proposal.setDateOfBirth(proposalDto.getDateOfBirth());
+		proposal.setCity(proposalDto.getCity());
+		proposal.setPincode(proposalDto.getPincode());
+		proposal.setAddress(proposalDto.getAddress());
+		proposal.setGender(proposalDto.getGender());
+		proposal.setMaritalStatus(proposalDto.getMaritalStatus());
+		proposal.setNationality(proposalDto.getNationality());
 		proposal.setStatus('Y');
 
 		Proposal savedProposal = proposalRepo.save(proposal);
 
-		List<NomineeDto> listOfData = dto.getNominee(); // Assuming this is a List<NomineeDto>
+		List<NomineeDto> listOfData = proposalDto.getNominee(); // Assuming this is a List<NomineeDto>
 		if (listOfData != null && !listOfData.isEmpty()) {
 			for (NomineeDto nomineeDto : listOfData) {
 				if (nomineeDto != null) {
@@ -296,22 +296,22 @@ public class ProposalServiceImpl implements ProposalService {
 	    // Map each active proposal to ProposalDto
 	    for (Proposal proposal : activeProposals) {
 
-	        ProposalDto dto = new ProposalDto();
-	        dto.setFirstName(proposal.getFirstName());
-	        dto.setMiddleName(proposal.getMiddleName());
-	        dto.setLastName(proposal.getLastName());
-	        dto.setPanNumber(proposal.getPanNumber());
-	        dto.setAnnualIncome(proposal.getAnnualIncome());
-	        dto.setEmailId(proposal.getEmailId());
-	        dto.setMobileNumber(proposal.getMobileNumber());
-	        dto.setAlternateMobileNumber(proposal.getAlternateMobileNumber());
-	        dto.setDateOfBirth(proposal.getDateOfBirth());
-	        dto.setCity(proposal.getCity());
-	        dto.setPincode(proposal.getPincode());
-	        dto.setAddress(proposal.getAddress());
-	        dto.setGender(proposal.getGender());
-	        dto.setMaritalStatus(proposal.getMaritalStatus());
-	        dto.setNationality(proposal.getNationality());
+	        ProposalDto proposalDto = new ProposalDto();
+	        proposalDto.setFirstName(proposal.getFirstName());
+	        proposalDto.setMiddleName(proposal.getMiddleName());
+	        proposalDto.setLastName(proposal.getLastName());
+	        proposalDto.setPanNumber(proposal.getPanNumber());
+	        proposalDto.setAnnualIncome(proposal.getAnnualIncome());
+	        proposalDto.setEmailId(proposal.getEmailId());
+	        proposalDto.setMobileNumber(proposal.getMobileNumber());
+	        proposalDto.setAlternateMobileNumber(proposal.getAlternateMobileNumber());
+	        proposalDto.setDateOfBirth(proposal.getDateOfBirth());
+	        proposalDto.setCity(proposal.getCity());
+	        proposalDto.setPincode(proposal.getPincode());
+	        proposalDto.setAddress(proposal.getAddress());
+	        proposalDto.setGender(proposal.getGender());
+	        proposalDto.setMaritalStatus(proposal.getMaritalStatus());
+	        proposalDto.setNationality(proposal.getNationality());
 
 	        // Fetch nominees for the proposal
 	        List<Nominee> nominees = proposal.getNominees(); // Assuming `getNominees()` fetches associated nominees
@@ -330,10 +330,10 @@ public class ProposalServiceImpl implements ProposalService {
 	        }
 
 	        // Add the nominee list to the proposalDto
-	        dto.setNominee(nomineeDtos);
+	        proposalDto.setNominee(nomineeDtos);
 
 	        // Add the ProposalDto to the list
-	        proposalDtoList.add(dto);
+	        proposalDtoList.add(proposalDto);
 	    }
 
 	    return proposalDtoList;
@@ -341,83 +341,83 @@ public class ProposalServiceImpl implements ProposalService {
 
 
 	@Override
-	public ProposalDto getByProposalId(Long id) {
-		Proposal p = proposalRepo.findById(id)
+	public ProposalDto getByProposalId(Long id ) {
+		Proposal proposal= proposalRepo.findById(id)
 				.orElseThrow(() -> new IllegalArgumentException("Proposal with ID " + id + " not found"));
 
-		ProposalDto dto = new ProposalDto();
-		dto.setFirstName(p.getFirstName());
-		dto.setMiddleName(p.getMiddleName());
-		dto.setLastName(p.getLastName());
-		dto.setPanNumber(p.getPanNumber());
-		dto.setAnnualIncome(p.getAnnualIncome());
-		dto.setEmailId(p.getEmailId());
-		dto.setMobileNumber(p.getMobileNumber());
-		dto.setAlternateMobileNumber(p.getAlternateMobileNumber());
-		dto.setDateOfBirth(p.getDateOfBirth());
-		dto.setCity(p.getCity());
-		dto.setPincode(p.getPincode());
-		dto.setAddress(p.getAddress());
-		dto.setGender(p.getGender());
-		dto.setMaritalStatus(p.getMaritalStatus());
-		dto.setNationality(p.getNationality());
+		ProposalDto proposalDto = new ProposalDto();
+		proposalDto.setFirstName(proposal.getFirstName());
+		proposalDto.setMiddleName(proposal.getMiddleName());
+		proposalDto.setLastName(proposal.getLastName());
+		proposalDto.setPanNumber(proposal.getPanNumber());
+		proposalDto.setAnnualIncome(proposal.getAnnualIncome());
+		proposalDto.setEmailId(proposal.getEmailId());
+		proposalDto.setMobileNumber(proposal.getMobileNumber());
+		proposalDto.setAlternateMobileNumber(proposal.getAlternateMobileNumber());
+		proposalDto.setDateOfBirth(proposal.getDateOfBirth());
+		proposalDto.setCity(proposal.getCity());
+		proposalDto.setPincode(proposal.getPincode());
+		proposalDto.setAddress(proposal.getAddress());
+		proposalDto.setGender(proposal.getGender());
+		proposalDto.setMaritalStatus(proposal.getMaritalStatus());
+		proposalDto.setNationality(proposal.getNationality());
 
-		return dto;
+		return proposalDto;
 	}
 
 	//update
 	@Override
-	public Proposal updateProposal(Long id, ProposalDto dto) {
+	public Proposal updateProposal(Long id, ProposalDto proposalDto) {
 		Proposal proposal = proposalRepo.findById(id).orElse(null);
 		if (proposal == null) {
 			return null;
 		}
 
 		// Update only if data is not null or not blank
-		if (dto.getFirstName() != null && !dto.getFirstName().trim().isEmpty()) {
-			proposal.setFirstName(dto.getFirstName());
+		if (proposalDto.getFirstName() != null && !proposalDto.getFirstName().trim().isEmpty()) {
+			proposal.setFirstName(proposalDto.getFirstName());
 		}
-		if (dto.getLastName() != null && !dto.getLastName().trim().isEmpty()) {
-			proposal.setLastName(dto.getLastName());
+		if (proposalDto.getLastName() != null && !proposalDto.getLastName().trim().isEmpty()) {
+			proposal.setLastName(proposalDto.getLastName());
 		}
-		if (dto.getMiddleName() != null && !dto.getMiddleName().trim().isEmpty()) {
-			proposal.setMiddleName(dto.getMiddleName());
+		if (proposalDto.getMiddleName() != null && !proposalDto.getMiddleName().trim().isEmpty()) {
+			proposal.setMiddleName(proposalDto.getMiddleName());
 		}
-		if (dto.getPanNumber() != null && !dto.getPanNumber().trim().isEmpty()) {
-			proposal.setPanNumber(dto.getPanNumber());
+		if (proposalDto.getPanNumber() != null && !proposalDto.getPanNumber().trim().isEmpty()) {
+			proposal.setPanNumber(proposalDto.getPanNumber());
 		}
-		if (dto.getAnnualIncome() != null) {
-			proposal.setAnnualIncome(dto.getAnnualIncome());
+		if (proposalDto.getAnnualIncome() != null) {
+			proposal.setAnnualIncome(proposalDto.getAnnualIncome());
 		}
-		if (dto.getEmailId() != null && !dto.getEmailId().trim().isEmpty()) {
-			proposal.setEmailId(dto.getEmailId());
+		if (proposalDto.getEmailId() != null && !proposalDto.getEmailId().trim().isEmpty()) {
+			proposal.setEmailId(proposalDto.getEmailId());
 		}
-		if (dto.getMobileNumber() != null && !dto.getMobileNumber().toString().trim().isEmpty()) {
-			proposal.setMobileNumber(dto.getMobileNumber());
+		if (proposalDto.getMobileNumber() != null && !proposalDto.getMobileNumber().toString().trim().isEmpty()) {
+			proposal.setMobileNumber(proposalDto.getMobileNumber());
 		}
-		if (dto.getAlternateMobileNumber() != null && !dto.getAlternateMobileNumber().toString().trim().isEmpty()) {
-			proposal.setAlternateMobileNumber(dto.getAlternateMobileNumber());
+		if (proposalDto.getAlternateMobileNumber() != null && !proposalDto.getAlternateMobileNumber().toString().trim().isEmpty()) {
+			proposal.setAlternateMobileNumber(proposalDto.getAlternateMobileNumber());
 		}
-		if (dto.getDateOfBirth() != null) {
-			proposal.setDateOfBirth(dto.getDateOfBirth());
+		if (proposalDto.getDateOfBirth() != null) {
+			proposal.setDateOfBirth(proposalDto.getDateOfBirth());
 		}
-		if (dto.getCity() != null && !dto.getCity().trim().isEmpty()) {
-			proposal.setCity(dto.getCity());
+		if (proposalDto.getCity() != null && !proposalDto.getCity().trim().isEmpty()) {
+			proposal.setCity(proposalDto.getCity());
 		}
-		if (dto.getPincode() != null && !dto.getPincode().trim().isEmpty()) {
-			proposal.setPincode(dto.getPincode());
+		if (proposalDto.getPincode() != null && !proposalDto.getPincode().trim().isEmpty()) {
+			proposal.setPincode(proposalDto.getPincode());
 		}
-		if (dto.getAddress() != null && !dto.getAddress().trim().isEmpty()) {
-			proposal.setAddress(dto.getAddress());
+		if (proposalDto.getAddress() != null && !proposalDto.getAddress().trim().isEmpty()) {
+			proposal.setAddress(proposalDto.getAddress());
 		}
-		if (dto.getGender() != null && !dto.getGender().toString().trim().isEmpty()) {
-			proposal.setGender(dto.getGender());
+		if (proposalDto.getGender() != null && !proposalDto.getGender().toString().trim().isEmpty()) {
+			proposal.setGender(proposalDto.getGender());
 		}
-		if (dto.getMaritalStatus() != null && !dto.getMaritalStatus().toString().trim().isEmpty()) {
-			proposal.setMaritalStatus(dto.getMaritalStatus());
+		if (proposalDto.getMaritalStatus() != null && !proposalDto.getMaritalStatus().toString().trim().isEmpty()) {
+			proposal.setMaritalStatus(proposalDto.getMaritalStatus());
 		}
-		if (dto.getNationality() != null && !dto.getNationality().toString().trim().isEmpty()) {
-			proposal.setNationality(dto.getNationality());
+		if (proposalDto.getNationality() != null && !proposalDto.getNationality().toString().trim().isEmpty()) {
+			proposal.setNationality(proposalDto.getNationality());
 		}
 
 		return proposalRepo.save(proposal);
@@ -598,9 +598,9 @@ public class ProposalServiceImpl implements ProposalService {
 	// Using Criteria Query
 	@Override
 	public List<Proposal> fetchAllProposerByListing(UserListing listing, UserFilter filter) {
-		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		CriteriaQuery<Proposal> cq = cb.createQuery(Proposal.class);
-		Root<Proposal> root = cq.from(Proposal.class);
+		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		CriteriaQuery<Proposal> criteriaQuery  = criteriaBuilder.createQuery(Proposal.class);
+		Root<Proposal> root = criteriaQuery .from(Proposal.class);
 
 		if (listing.getSortBy() == null || listing.getSortBy().trim().isEmpty()) {
 			throw new IllegalArgumentException("Please enter a valid string for sortBy");
@@ -615,31 +615,28 @@ public class ProposalServiceImpl implements ProposalService {
 		// Filtering
 		if (filter != null) {
 			if (filter.getFirstName() != null && !filter.getFirstName().isBlank()) {
-				predicates.add(cb.like(cb.lower(root.get("firstName")), "%" + filter.getFirstName().toLowerCase() + "%"));
+				predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("firstName")), "%" + filter.getFirstName().toLowerCase() + "%"));
 			}
 			if (filter.getMiddleName() != null && !filter.getMiddleName().isBlank()) {
-				predicates.add(cb.like(cb.lower(root.get("middleName")), "%" + filter.getMiddleName().toLowerCase() + "%"));
+				predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("middleName")), "%" + filter.getMiddleName().toLowerCase() + "%"));
 			}
 			if (filter.getLastName() != null && !filter.getLastName().isBlank()) {
-				predicates.add(cb.like(cb.lower(root.get("lastName")), "%" + filter.getLastName().toLowerCase() + "%"));
+				predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("lastName")), "%" + filter.getLastName().toLowerCase() + "%"));
 			}
 			if (filter.getEmailId() != null && !filter.getEmailId().isBlank()) {
-				predicates.add(cb.like(cb.lower(root.get("emailId")), "%" + filter.getEmailId().toLowerCase() + "%"));
+				predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("emailId")), "%" + filter.getEmailId().toLowerCase() + "%"));
 			}
 			if (filter.getMobileNumber() != null && !filter.getMobileNumber().isBlank()) {
 				try {
 					Long mobileNo = Long.parseLong(filter.getMobileNumber());
-					predicates.add(cb.equal(root.get("mobileNumber"), mobileNo));
+					predicates.add(criteriaBuilder.equal(root.get("mobileNumber"), mobileNo));
 				} catch (NumberFormatException e) {
 					throw new IllegalArgumentException("Invalid mobile number format");
 				}
 			}
 		}
 
-		cq.where(predicates.toArray(new Predicate[0]));
-
-		// Check for special "00" condition
-
+		criteriaQuery .where(predicates.toArray(new Predicate[0]));
 
 		// Apply sorting only if not fetching all
 		if (!fetchAll) {
@@ -649,13 +646,13 @@ public class ProposalServiceImpl implements ProposalService {
 			}
 			String sortOrder = listing.getSortOrder();
 			if (sortOrder == null || !sortOrder.equalsIgnoreCase("asc")) {
-				cq.orderBy(cb.desc(root.get(sortBy)));
+				criteriaQuery .orderBy(criteriaBuilder.desc(root.get(sortBy)));
 			} else {
-				cq.orderBy(cb.asc(root.get(sortBy)));
+				criteriaQuery .orderBy(criteriaBuilder.asc(root.get(sortBy)));
 			}
 		}
 
-		TypedQuery<Proposal> query = entityManager.createQuery(cq);
+		TypedQuery<Proposal> query = entityManager.createQuery(criteriaQuery);
 
 		// Apply pagination only if not fetching all
 		if (!fetchAll) {
@@ -692,23 +689,23 @@ public class ProposalServiceImpl implements ProposalService {
 
 
 			int rowNum = 1;
-			for (Proposal p : proposals) {
+			for (Proposal responseProposal : proposals) {
 				Row row = sheet.createRow(rowNum++);
-				row.createCell(0).setCellValue(p.getFirstName());
-				row.createCell(1).setCellValue(p.getMiddleName());
-				row.createCell(2).setCellValue(p.getLastName());
-				row.createCell(3).setCellValue(p.getPanNumber());
-				row.createCell(4).setCellValue(p.getAnnualIncome() != null ? p.getAnnualIncome() : 0);
-				row.createCell(5).setCellValue(p.getEmailId());
-				row.createCell(6).setCellValue(p.getMobileNumber() != null ? p.getMobileNumber() : 0);
-				row.createCell(7).setCellValue(p.getAlternateMobileNumber() != null ? p.getAlternateMobileNumber() : 0);
-				row.createCell(8).setCellValue(p.getDateOfBirth() != null ? p.getDateOfBirth().toString() : "");
-				row.createCell(9).setCellValue(p.getCity());
-				row.createCell(10).setCellValue(p.getPincode());
-				row.createCell(11).setCellValue(p.getAddress());
-				row.createCell(12).setCellValue(p.getGender() != null ? p.getGender().name() : "");
-				row.createCell(13).setCellValue(p.getMaritalStatus() != null ? p.getMaritalStatus().name() : "");
-				row.createCell(14).setCellValue(p.getNationality() != null ? p.getNationality().name() : "");
+				row.createCell(0).setCellValue(responseProposal.getFirstName());
+				row.createCell(1).setCellValue(responseProposal.getMiddleName());
+				row.createCell(2).setCellValue(responseProposal.getLastName());
+				row.createCell(3).setCellValue(responseProposal.getPanNumber());
+				row.createCell(4).setCellValue(responseProposal.getAnnualIncome() != null ? responseProposal.getAnnualIncome() : 0);
+				row.createCell(5).setCellValue(responseProposal.getEmailId());
+				row.createCell(6).setCellValue(responseProposal.getMobileNumber() != null ? responseProposal.getMobileNumber() : 0);
+				row.createCell(7).setCellValue(responseProposal.getAlternateMobileNumber() != null ? responseProposal.getAlternateMobileNumber() : 0);
+				row.createCell(8).setCellValue(responseProposal.getDateOfBirth() != null ? responseProposal.getDateOfBirth().toString() : "");
+				row.createCell(9).setCellValue(responseProposal.getCity());
+				row.createCell(10).setCellValue(responseProposal.getPincode());
+				row.createCell(11).setCellValue(responseProposal.getAddress());
+				row.createCell(12).setCellValue(responseProposal.getGender() != null ? responseProposal.getGender().name() : "");
+				row.createCell(13).setCellValue(responseProposal.getMaritalStatus() != null ? responseProposal.getMaritalStatus().name() : "");
+				row.createCell(14).setCellValue(responseProposal.getNationality() != null ? responseProposal.getNationality().name() : "");
 			}
 
 			File file = new File(filePath);
@@ -869,33 +866,33 @@ public class ProposalServiceImpl implements ProposalService {
 	    );
 	}
 
-	private Proposal mapRowToProposal(Row row) {
-	    Proposal p = new Proposal();
-	    System.out.println("Processing row " + row.getRowNum());
-	    p.setFirstName(getStringValue(row.getCell(0)));
-	    p.setMiddleName(getStringValue(row.getCell(1)));
-	    p.setLastName(getStringValue(row.getCell(2)));
-	    p.setPanNumber(getStringValue(row.getCell(3)));
-	    p.setAnnualIncome(getLongValue(row.getCell(4)));
-	    p.setEmailId(getStringValue(row.getCell(5)));
-	    p.setMobileNumber(getLongValue(row.getCell(6)));
-	    p.setAlternateMobileNumber(getLongValue(row.getCell(7)));
-	    p.setDateOfBirth(getLocalDateValue(row.getCell(8)));
-	    p.setCity(getStringValue(row.getCell(9)));
-	    p.setPincode(getStringValue(row.getCell(10)));
-	    p.setAddress(getStringValue(row.getCell(11)));
-	    p.setGender(getEnumValue(row.getCell(12), Gender.class, "Gender", row.getRowNum(), new ArrayList<>())); 
-	    p.setMaritalStatus(getEnumValue(row.getCell(13), MaritalStatus.class, "MaritalStatus", row.getRowNum(), new ArrayList<>())); 
-	    p.setNationality(getEnumValue(row.getCell(14), Nationality.class, "Nationality", row.getRowNum(), new ArrayList<>()));
-	    p.setStatus('Y');
+	private Proposal mapRowToProposal(Row rowData) {
+	    Proposal proposal = new Proposal();
+	    System.out.println("Processing row " + rowData.getRowNum());
+	    proposal.setFirstName(getStringValue(rowData.getCell(0)));
+	    proposal.setMiddleName(getStringValue(rowData.getCell(1)));
+	    proposal.setLastName(getStringValue(rowData.getCell(2)));
+	    proposal.setPanNumber(getStringValue(rowData.getCell(3)));
+	    proposal.setAnnualIncome(getLongValue(rowData.getCell(4)));
+	    proposal.setEmailId(getStringValue(rowData.getCell(5)));
+	    proposal.setMobileNumber(getLongValue(rowData.getCell(6)));
+	    proposal.setAlternateMobileNumber(getLongValue(rowData.getCell(7)));
+	    proposal.setDateOfBirth(getLocalDateValue(rowData.getCell(8)));
+	    proposal.setCity(getStringValue(rowData.getCell(9)));
+	    proposal.setPincode(getStringValue(rowData.getCell(10)));
+	    proposal.setAddress(getStringValue(rowData.getCell(11)));
+	    proposal.setGender(getEnumValue(rowData.getCell(12), Gender.class, "Gender", rowData.getRowNum(), new ArrayList<>())); 
+	    proposal.setMaritalStatus(getEnumValue(rowData.getCell(13), MaritalStatus.class, "MaritalStatus", rowData.getRowNum(), new ArrayList<>())); 
+	    proposal.setNationality(getEnumValue(rowData.getCell(14), Nationality.class, "Nationality", rowData.getRowNum(), new ArrayList<>()));
+	    proposal.setStatus('Y');
 	    
 	    // Log the fields
-	    System.out.println("First Name: " + p.getFirstName());
-	    System.out.println("Last Name: " + p.getLastName());
-	    System.out.println("Email ID: " + p.getEmailId());
+	    System.out.println("First Name: " + proposal.getFirstName());
+	    System.out.println("Last Name: " + proposal.getLastName());
+	    System.out.println("Email ID: " + proposal.getEmailId());
 	    // Add similar logs for other fields
 
-	    return p;
+	    return proposal;
 	}
 
 	private String getStringValue(Cell cell) {
@@ -1350,5 +1347,10 @@ public class ProposalServiceImpl implements ProposalService {
 			}
 		}
 		return null;
+	
 	}
+
+
 }
+	
+

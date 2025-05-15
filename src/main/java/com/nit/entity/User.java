@@ -1,10 +1,14 @@
 package com.nit.entity;
 
+
+
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+
 @Entity
 @Table(name = "user_details")
 public class User {
@@ -12,11 +16,26 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String username;
     private String password;
+    private String fullName;
+    private String emailId;
+    private String userRole;
+    public User() {}
+  
 
-    public Long getId() {
+    public User(Long id, String username, String password, String fullName, String emailId, String userRole) {
+		super();
+		this.id = id;
+		this.username = username;
+		this.password = password;
+		this.fullName = fullName;
+		this.emailId = emailId;
+		this.userRole = userRole;
+	}
+
+
+	public Long getId() {
 		return id;
 	}
 	public void setId(Long id) {
@@ -34,13 +53,23 @@ public class User {
 	public void setPassword(String password) {
 		this.password = password;
 	}
-	// Constructors
-    public User() {}
-    public User(String username, String password) {
-        this.username = username;
-        this.password = password;
-    }
-
-    // Getters & Setters
-    // ...
+	public String getFullName() {
+		return fullName;
+	}
+	public void setFullName(String fullName) {
+		this.fullName = fullName;
+	}
+	public String getEmailId() {
+		return emailId;
+	}
+	public void setEmailId(String emailId) {
+		this.emailId = emailId;
+	}
+	public String getUserRole() {
+		return userRole;
+	}
+	public void setUserRole(String userRole) {
+		this.userRole = userRole;
+	}
+	
 }
