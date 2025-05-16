@@ -32,17 +32,19 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         final String authorizationHeader = request.getHeader("Authorization");
 
-        String path = request.getRequestURI();
+//        String path = request.getRequestURI();
         String username = null;
         String jwt = null;
-        if (path.startsWith("/auth/register") || path.startsWith("/auth/login")
-                || path.startsWith("/swagger") || path.startsWith("/v3/api-docs")) {
-                chain.doFilter(request, response);
-                return;
-            }
+//        if (path.startsWith("/auth/register") || path.startsWith("/auth/login")
+//                || path.startsWith("/swagger") || path.startsWith("/v3/api-docs")) {
+//                chain.doFilter(request, response);
+//                return;
+//            }
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
             username = jwtUtil.extractUsername(jwt);
+            String emailId = jwtUtil.extractEmailId(jwt);
+            System.err.println("kkk "+emailId);
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {

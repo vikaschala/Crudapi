@@ -70,100 +70,41 @@ public class ProposalController {
 		return response; 
 	}
 
-/*	@GetMapping("/report")
-	public ResponseHandler getAllProposals(HttpServletRequest request) {
-	    ResponseHandler response = new ResponseHandler();
-
-	    try {
-	        // 1. Extract and validate the Authorization header
-	        String header = request.getHeader("Authorization");
-	        if (header == null || !header.startsWith("Bearer ")) {
-	            response.setStatus(false);
-	            response.setMessage("Missing or invalid Authorization header");
-	            return response;
-	        }
-	        String token = header.substring(7).trim();
-                
-	        // 2. Parse the token and extract claims
-	        String firstName, lastName, emailId, mobileNumber, panNumber;
-	        java.util.Date expiresAt;
-	        try {
-	            firstName    = jwtUtil.extractFirstName(token);
-	            lastName     = jwtUtil.extractLastName(token);
-	            emailId      = jwtUtil.extractEmailId(token);
-	            mobileNumber = jwtUtil.extractMobileNumber(token);
-	            panNumber    = jwtUtil.extractPanNumber(token);
-	            expiresAt    = jwtUtil.extractExpiration(token);
-	        } catch (Exception parseEx) {
-	            parseEx.printStackTrace();
-	            response.setStatus(false);
-	            response.setMessage("Failed to parse token: " + parseEx.getMessage());
-	            return response;
-	        }
-
-	        // 3. Fetch all active proposals
-	        List<ProposalDto> proposals;
-	        try {
-	            proposals = proposalService.getAllActiveProposals();
-	            if (proposals == null) {
-	                proposals = Collections.emptyList();
-	            }
-	        } catch (Exception svcEx) {
-	            svcEx.printStackTrace();
-	            response.setStatus(false);
-	            response.setMessage("Failed to fetch proposals: " + svcEx.getMessage());
-	            return response;
-	        }
-
-	        // 4. Build the response payload
-	        Map<String, Object> data = new HashMap<>();
-	        data.put("tokenExpiresAt", expiresAt);
-	        data.put("tokenClaims", Map.of(
-	            "firstName", firstName,
-	            "lastName", lastName,
-	            "emailId", emailId,
-	            "mobileNumber", mobileNumber,
-	            "panNumber", panNumber
-	        ));
-	        data.put("proposals", proposals);
-
-	        response.setStatus(true);
-	        response.setData(data);
-	        response.setMessage("Proposals + token info fetched successfully");
-
-	    } catch (Exception e) {
-	        // Fallback for any other unexpected error
-	        e.printStackTrace();
-	        response.setStatus(false);
-	        response.setMessage("Unexpected error: " + e.getMessage());
-	    }
-
-	    return response;
-	}
-    */
 	@GetMapping("/report")
 	public ResponseHandler getAllProposals(HttpServletRequest request) {
 	    ResponseHandler response = new ResponseHandler();
 
 	    try {
-	        // Step 1: Get Authorization header
 	        String authHeader = request.getHeader("Authorization");
-	        if (authHeader != null && !authHeader.startsWith("Bearer ")) {
-	           
+
+	        if (authHeader != null && authHeader.startsWith("Bearer")) {
+	            String token = authHeader.substring(7); // Remove "Bearer " prefix
+	            String emailId = jwtUtil.extractEmailId(token);
+	            String fullName = jwtUtil.extractFullName(token);
+	            String role = jwtUtil.extractUserRole(token);
+	            String username=jwtUtil.extractUsername(token);
 	        
+	            List<Proposal> proposals = proposalRepo.findAll();
 
-	        // Step 2: Extract token
-	        String token = authHeader.substring(7);
+	            Map<String, Object> responseData = new HashMap<>();
+	            Map<String, Object> userInfo = new HashMap<>();
+	            userInfo.put("username", username);
+	            userInfo.put("fullName", fullName);
+	            userInfo.put("emailId", emailId);
+	            userInfo.put("userRole", role);
 
-	        // Step 3: Use jwtUtil to extract claims
-	        String emailId = jwtUtil.extractEmailId(token);        // from your custom method
-	        String fullName = jwtUtil.extractFullName(token);      // optional
-	        String role = jwtUtil.extractUserRole(token);          // optional
+	            responseData.put("userInfo", userInfo);
+	            responseData.put("proposals", proposals);
 
-	        // Step 4: Get data from DB
-	      response.setEmailId(emailId);
-	    
-
+	            response.setData(responseData);
+	            response.setStatus(true);
+	            response.setMessage("Data extracted and proposals retrieved successfully.");
+	            response.setTotalRecord(proposals.size());
+	        } else {
+	            response.setStatus(false);
+	            response.setMessage("Invalid Authorization header.");
+	            response.setData(null);
+	            response.setTotalRecord(0);
 	        }
 
 	    } catch (Exception e) {
