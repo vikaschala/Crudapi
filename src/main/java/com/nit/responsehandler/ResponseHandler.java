@@ -45,7 +45,7 @@ public class ResponseHandler {
         this.totalRecord = totalRecord;
     }
 
-	public String getUsername() {
+	public String getUsername() {              
 		return username;
 	}
 

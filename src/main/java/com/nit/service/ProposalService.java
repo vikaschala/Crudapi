@@ -1,4 +1,4 @@
-package com.nit.proposalservice;
+package com.nit.service;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;

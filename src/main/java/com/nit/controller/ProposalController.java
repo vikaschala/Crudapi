@@ -25,9 +25,9 @@ import com.nit.dto.ProposalDto;
 import com.nit.dto.UserListing;
 import com.nit.entity.Proposal;
 import com.nit.entity.UserFilter;
-import com.nit.proposalservice.ProposalService;
 import com.nit.repository.ProposalRepo;
 import com.nit.responsehandler.ResponseHandler;
+import com.nit.service.ProposalService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

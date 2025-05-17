@@ -33,31 +33,20 @@ public class WebSecurityConfig {
 	}
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-	    http.csrf(csrf -> csrf.disable())
-	        .authorizeHttpRequests(auth -> auth
-	        		.requestMatchers(
-	        				 "/v3/api-docs/**",
-	                         "/swagger-ui/**",
-	                         "/swagger-ui.html",
-	                         "/swagger-resources/**",
-	                         "/configuration/**",
-	                         "/webjars/**",
-	                         "/auth/login",
-	                         "/auth/register"
-	        			).permitAll()
-
-	            .anyRequest().authenticated()
-	        )
+		http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(auth -> auth
+				.requestMatchers("/auth/register", "/auth/login", "/swagger-ui.html/**", "/swagger-ui/**", "/v3/api-docs/**")
+				.permitAll().anyRequest().authenticated())
 	        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 	        .authenticationProvider(authenticationProvider())
 	        .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
 	        .exceptionHandling(handling -> handling
-	            .authenticationEntryPoint((request, response, authException) ->
+	            .authenticationEntryPoint((request, response, authException) -> 
 	                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
 	        );
 
 	    return http.build();
 	}
+
 
 
 	@Bean

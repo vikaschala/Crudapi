@@ -7,6 +7,7 @@ import java.util.List;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.nit.enumeration.Gender;
 import com.nit.enumeration.MaritalStatus;
 import com.nit.enumeration.Nationality;
@@ -102,7 +103,7 @@ public class Proposal {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
-
+    @JsonBackReference
 	public List<Nominee> getNominees() { 
 		return nominees; 
 	}

@@ -1,6 +1,6 @@
 package com.nit.JwtUtil;
 
-import java.nio.channels.NonWritableChannelException;
+
 import java.nio.charset.StandardCharsets;
 
 import java.util.Date;
@@ -16,7 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import com.nit.entity.User;
-import com.nit.repository.ProposalRepo;
+
 import com.nit.repository.UserRepository;
 
 import io.jsonwebtoken.Claims;
@@ -36,11 +36,12 @@ public class JwtUtil {
 	private static final String SECRET = "your_super_secret_key_must_be_32_chars_min";
 	private static final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
 
-	private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 10; // 10 hours
+	private static final long EXPIRATION_TIME = 1000 * 60 * 1; // 1 minute in milliseconds
+
 	public String generateToken(User userEntity, String username) {
 		Map<String, Object> claims = new HashMap<>();
 		claims.put("fullName", userEntity.getFullName());
-		claims.put("emailId", userEntity.getEmailId());
+	    claims.put("emailId", userEntity.getEmailId());
 		claims.put("userRole", userEntity.getUserRole());
 		claims.put("userId", userEntity.getId());
 		return Jwts.builder()
@@ -73,46 +74,12 @@ public class JwtUtil {
 				.getBody();
 	}
 
-	public Boolean validateToken(String token, UserDetails userDetails) {
-	    try {
-	        String username = extractUsername(token);
-	        String fullName = extractFullName(token);
-	        String emailId = extractEmailId(token);
-	        String userRole = extractUserRole(token);
-
-	        // Validate nulls
-	        if (username == null || userDetails == null || fullName == null ||
-	            emailId == null || userRole == null) {
-	            return false;
-	        }
-
-	        Optional<User> userOptional = userRepo.findByUsername(username);
-	        System.out.println(userOptional);
-	        if (userOptional.isEmpty()) {
-	            return false;
-	        }
-
-	        User user = userOptional.get();
-
-	        return username.equals(userDetails.getUsername()) &&
-	               !isTokenExpired(token) &&
-	               fullName.equals(user.getFullName()) &&
-	               emailId.equals(user.getEmailId()) &&
-	               userRole.equals(user.getUserRole());
-
-	    } catch (Exception e) {
-	        e.printStackTrace(); // Optional: log this properly
-	        return false;
-	    }
-	}
-
-
 	private Boolean isTokenExpired(String token) {
 		return extractExpiration(token).before(new Date());
 	}
-	public String extractEmailId(String token) {
+	public String extractEmailId(String token) {	
 		return extractAllClaims(token).get("emailId", String.class);
-	}
+}
 
 	// Extract fullName
 	public String extractFullName(String token) {
@@ -126,41 +93,8 @@ public class JwtUtil {
 	public Long extractUserId(String token) {
 		return extractAllClaims(token).get("userId",Long.class);   
 	}
-
-
+	public Boolean validateToken(String token, UserDetails userDetails) {
+	final String username = extractUsername(token);	
+	return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
 }
-//    
-//    public String extractUsername(String token) {
-//        return extractClaim(token, Claims::getSubject);
-//    }
-//
-//    public Date extractExpiration(String token) {
-//        return extractClaim(token, Claims::getExpiration);
-//    }
-//
-//    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-//        final Claims claims = extractAllClaims(token);
-//        return claimsResolver.apply(claims);
-//    }
-//
-//    private Claims extractAllClaims(String token) {
-//        return Jwts
-//                .parserBuilder()
-//                .setSigningKey(SECRET_KEY)
-//                .build()
-//                .parseClaimsJws(token)
-//                .getBody();
-//    }
-//
-//    private Boolean isTokenExpired(String token) {
-//        return extractExpiration(token).before(new Date());
-//    }
-//
-//   
-//
-//    public Boolean validateToken(String token, UserDetails userDetails) {
-//        final String username = extractUsername(token);
-//        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
-//    }
-//
-
+}
