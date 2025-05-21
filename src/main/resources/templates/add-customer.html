@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Add Customer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* Reset and base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        html, body {
+            height: 100%;
+            background: linear-gradient(
+                rgba(0, 0, 0, 0.55),
+                rgba(0, 0, 0, 0.55)
+            ), 
+            url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1470&q=80') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Overlay to darken background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 0;
+        }
+
+        .form-container {
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px 30px 35px 30px;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 420px;
+            transition: all 0.3s ease;
+        }
+
+        .form-container h2 {
+            text-align: center;
+            color: #222;
+            margin-bottom: 28px;
+            font-weight: 700;
+            font-size: 2rem;
+        }
+
+        .form-container input[type="text"],
+        .form-container input[type="email"] {
+            width: 100%;
+            padding: 14px 16px;
+            margin-bottom: 20px;
+            border: 1.8px solid #ccc;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .form-container input[type="text"]:focus,
+        .form-container input[type="email"]:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.6);
+            outline: none;
+            background-color: #fff;
+        }
+
+        .form-container button {
+            width: 100%;
+            padding: 14px 0;
+            background-color: #007bff;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,123,255,0.4);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .form-container button:hover,
+        .form-container button:focus {
+            background-color: #0056b3;
+            box-shadow: 0 6px 18px rgba(0,86,179,0.6);
+            outline: none;
+        }
+
+        .form-container a {
+            display: block;
+            text-align: center;
+            margin-top: 22px;
+            font-weight: 600;
+            color: #007bff;
+            text-decoration: none;
+            font-size: 1rem;
+            transition: color 0.3s ease;
+        }
+
+        .form-container a:hover {
+            text-decoration: underline;
+            color: #0056b3;
+        }
+
+        /* Responsive tweaks */
+        @media (max-width: 480px) {
+            .form-container {
+                padding: 30px 20px 25px 20px;
+                max-width: 95%;
+            }
+
+            .form-container h2 {
+                font-size: 1.6rem;
+                margin-bottom: 20px;
+            }
+
+            .form-container input[type="text"],
+            .form-container input[type="email"] {
+                font-size: 1rem;
+                padding: 12px 14px;
+            }
+
+            .form-container button {
+                font-size: 1rem;
+                padding: 12px 0;
+            }
+
+            .form-container a {
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container" th:object="${customer}">
+        <h2>Add Customer</h2>
+        <form th:action="@{/add}" method="post" >
+            <input type="text" th:field="*{name}" placeholder="Name" required/>
+            <input type="email" th:field="*{email}" placeholder="Email" required/>
+            <input type="text" th:field="*{phone}" placeholder="Phone" required/>
+            <button type="submit">Save</button>
+        </form>
+        <a th:href="@{/list}">← Back to List</a>
+    </div>
+</body>
+</html>
